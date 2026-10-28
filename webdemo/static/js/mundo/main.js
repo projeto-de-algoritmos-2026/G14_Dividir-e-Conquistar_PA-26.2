@@ -6,6 +6,7 @@
 // um pixel fisico da tela. ?dpr=2 forca a razao (so pra conferir em tela comum).
 
 import { CenaMundo } from "./cena.js";
+import { CenaBatalha } from "./batalha.js";
 
 const q = new URLSearchParams(location.search);
 const forcado = parseFloat(q.get("dpr"));
@@ -21,10 +22,13 @@ const jogo = new Phaser.Game({
   antialias: true,
   roundPixels: false,
   scale: { mode: Phaser.Scale.NONE, width: t.w, height: t.h, zoom: 1 / dpr },
-  scene: [CenaMundo],
+  scene: [CenaMundo, CenaBatalha],
 });
 
 window.addEventListener("resize", () => {
   const n = tamanho();
   jogo.scale.resize(n.w, n.h);
 });
+
+// so pra inspecionar no console / conferir quadros
+window.__jogo = jogo;

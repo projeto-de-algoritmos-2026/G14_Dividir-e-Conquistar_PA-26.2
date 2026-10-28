@@ -1,10 +1,12 @@
-// Cena do mundo 2.5D. Renderiza o MESMO grid que a API ja devolve
-// (/api/t2/jogo/novo) e anda o jogador pelo MESMO endpoint de movimento
-// (/api/t2/jogo/mover). Nenhuma regra do jogo mora aqui: o cliente so
-// PRE-CHECA com os campos que a API manda (pisavel_sem_surf / pisavel_com_surf)
-// pra dar resposta imediata, e o servidor continua sendo quem decide.
+// Cena do mundo 2.5D. Renderiza o grid que a API do Trabalho 3 devolve
+// (/api/t3/jogo/novo, com ginasios) e anda o jogador pelo endpoint de
+// movimento (/api/t3/jogo/mover). Quando o passo esbarra num selvagem, treinador
+// ou ginasio, a API devolve `encontro` e a cena abre a batalha (batalha.js).
+// Nenhuma regra do jogo mora aqui: o cliente so PRE-CHECA com os campos que a
+// API manda (pisavel_sem_surf / pisavel_com_surf) pra dar resposta imediata, e
+// o servidor continua sendo quem decide.
 
-import { api } from "../api.js";
+import { api3 } from "../api.js";
 import {
   ALTURA, CONTEUDO_GINASIO, DIRECOES, ESC, FOLGA, MARGEM_MAPA, TECLAS, TEMPO_PASSO, TH, TW,
   ZOOM_MAX_REL, ZOOM_MIN_REL, profundidade, projetar, topoDe,
@@ -43,16 +45,12 @@ function parametros() {
     const v = parseInt(q.get(nome), 10);
     return Number.isFinite(v) ? v : padrao;
   };
-  // ?ginasio=r,c so existe pra pre-visualizar o tile reservado, ja que o grid
-  // ainda nao gera nenhum. Nao muda regra nenhuma, so o desenho dessa celula.
-  const g = (q.get("ginasio") || "").split(",").map((x) => parseInt(x, 10));
   return {
     size: inteiro("size", 12),
     seed: inteiro("seed", 42),
-    energia: q.get("energia") || undefined,
-    // ?lento=N estica o passo N vezes, so pra capturar um quadro no meio dele
+    nivel: q.get("nivel") ? inteiro("nivel", 35) : undefined,
+    // ?lento=N estica o passo e a batalha N vezes, so pra capturar um quadro no meio
     lento: Math.max(1, inteiro("lento", 1)),
-    ginasio: g.length === 2 && g.every(Number.isFinite) ? g : null,
   };
 }
 
@@ -65,6 +63,10 @@ export class CenaMundo extends Phaser.Scene {
     this.vivos = []; // entidades com idle manual (bob, respiracao, piscada), ver animarVivos
     this.tufos = new Map(); // "r,c" -> sprite de grama que balanca
     this.ultimoPasso = -1e9;
+    this.emBatalha = false;
+    this.surf = false;
+    this.venceu = new Set(); // regioes cujo lider ja caiu
+    this.etiquetas = new Map(); // "r,c" -> texto do ginasio
   }
 
   create() {
@@ -79,7 +81,7 @@ export class CenaMundo extends Phaser.Scene {
     });
     this.scale.on("resize", () => this.aoRedimensionar());
 
-    this.teclas = this.input.keyboard.addKeys("UP,DOWN,LEFT,RIGHT,W,A,S,D,R");
+    this.teclas = this.input.keyboard.addKeys("UP,DOWN,LEFT,RIGHT,W,A,S,D");
     this.input.on("wheel", (_p, _o, _dx, dy) => {
       if (!this.zoomBase) return;
       const cam = this.cameras.main;
@@ -89,7 +91,6 @@ export class CenaMundo extends Phaser.Scene {
       cam.setZoom(z);
       this.zoomManual = true;
     });
-    this.recarregarTeclaSolta = true;
     // Buffer de 1 passo: se a tecla vem com um passo em andamento (requisicao
     // em voo ou animacao), so a ULTIMA fica guardada e sai quando ele termina.
     // Sem fila longa. Toque rapido tambem passa por aqui (o poll de isDown no
@@ -99,7 +100,7 @@ export class CenaMundo extends Phaser.Scene {
       if (e.repeat) return; // tecla segurada e tratada pelo poll do update
       const nome = e.key.replace(/^Arrow/, "").toUpperCase();
       const dir = TECLAS[nome];
-      if (!dir || !this.sessao || this.encerrado) return;
+      if (!dir || !this.sessao || this.encerrado || this.emBatalha) return;
       if (this.ocupado) this.proximo = dir;
       else this.tentarPasso(dir);
     });
@@ -107,15 +108,14 @@ export class CenaMundo extends Phaser.Scene {
 
   async carregar() {
     const p = parametros();
-    const jogo = await api.jogoNovo(p.size, p.seed, p.energia);
+    const jogo = await api3.jogoNovo(p.size, p.seed, p.nivel);
     this.sessao = jogo.sessao;
     this.size = jogo.size;
     this.celulas = jogo.celulas;
-    this.centros = jogo.centros || [];
     this.jogador = jogo.jogador;
-    this.energia = { atual: jogo.jogador.energia, max: jogo.jogador.energia_max };
     this.fatorTempo = p.lento;
-    this.ginasios = p.ginasio ? [p.ginasio] : [];
+    this.centros = [];
+    this.celulas.forEach((linha, r) => linha.forEach((cel, c) => { if (cel.conteudo === "centro") this.centros.push([r, c]); }));
     this.aviso.hidden = true;
 
     this.montarMapa();
@@ -125,11 +125,8 @@ export class CenaMundo extends Phaser.Scene {
     this.atualizarMarcadorCentro();
   }
 
-  // Conteudo que decide o desenho da celula. Centro vem tambem da lista
-  // `centros` da API (e o campo que o mapa 2D usa); ginasio e o tipo reservado.
+  // Conteudo que decide o desenho da celula (a API ja manda "ginasio" e "centro").
   tipoDoConteudo(r, c) {
-    if (this.ginasios.some(([gr, gc]) => gr === r && gc === c)) return CONTEUDO_GINASIO;
-    if (this.centros.some(([cr, cc]) => cr === r && cc === c)) return "centro";
     return this.celulas[r][c].conteudo;
   }
 
@@ -239,6 +236,7 @@ export class CenaMundo extends Phaser.Scene {
         delay: 170, loop: true, callback: () => { i = (i + 1) % ordem.length; bandeira.setTexture(`bandeira_${ordem[i]}`); },
       });
       entrada.bandeira = bandeira;
+      entrada.etiqueta = this.criarEtiquetaGinasio(r, c, objeto);
     }
     if (entrada.vivo) this.vivos.push(entrada.vivo);
 
@@ -250,6 +248,29 @@ export class CenaMundo extends Phaser.Scene {
         .setDepth(d + 0.05).setAlpha(0.55);
     }
     this.props.set(`${r},${c}`, entrada);
+  }
+
+  // Etiqueta na porta do ginasio: lider e nivel do time (campo `ginasio` da celula).
+  criarEtiquetaGinasio(r, c, objeto) {
+    const info = this.celulas[r][c].ginasio;
+    if (!info) return null;
+    const t = this.add.text(objeto.x, objeto.y + 6.5, "", {
+      fontFamily: "ui-sans-serif, system-ui, 'Segoe UI', sans-serif", fontStyle: "700", fontSize: "6.4px", color: "#f1f4f8",
+      backgroundColor: "#2a2350", padding: { x: 3, y: 1.4 },
+    }).setOrigin(0.5, 0).setDepth(900 + r).setResolution(8);
+    this.etiquetas.set(`${r},${c}`, t);
+    this.pintarEtiqueta(r, c);
+    return t;
+  }
+
+  pintarEtiqueta(r, c) {
+    const t = this.etiquetas.get(`${r},${c}`);
+    const info = this.celulas[r][c].ginasio;
+    if (!t || !info) return;
+    const vencido = this.venceu.has(info.regiao);
+    t.setText(vencido ? `${info.lider} - vencido` : `${info.lider}  Nv ${info.nivel_time}`);
+    t.setColor(vencido ? "#7ff0de" : "#f1f4f8");
+    t.setBackgroundColor(vencido ? "#0b4a43" : "#2a2350");
   }
 
   removerProp(r, c) {
@@ -381,7 +402,7 @@ export class CenaMundo extends Phaser.Scene {
     const c = this.col + dc;
     if (r < 0 || c < 0 || r >= this.size || c >= this.size) return { ok: false, motivo: "fora do mapa" };
     const cel = this.celulas[r][c];
-    const pisavel = this.jogador.surf ? cel.pisavel_com_surf : cel.pisavel_sem_surf;
+    const pisavel = this.surf ? cel.pisavel_com_surf : cel.pisavel_sem_surf;
     if (pisavel) return { ok: true };
     if (cel.conteudo === "bloqueio") return { ok: false, motivo: "celula inacessivel" };
     return { ok: false, motivo: "agua sem surf" };
@@ -398,12 +419,6 @@ export class CenaMundo extends Phaser.Scene {
         this.tentarPasso(TECLAS[nome]);
         return;
       }
-    }
-    if (T.R.isDown && this.recarregarTeclaSolta) {
-      this.recarregarTeclaSolta = false;
-      this.recarregar();
-    } else if (T.R.isUp) {
-      this.recarregarTeclaSolta = true;
     }
   }
 
@@ -423,19 +438,20 @@ export class CenaMundo extends Phaser.Scene {
       return;
     }
     try {
-      const res = await api.jogoMover(this.sessao, dir);
+      const res = await api3.jogoMover(this.sessao, dir);
       this.jogador = res.jogador;
-      this.energia = { atual: res.jogador.energia, max: res.jogador.energia_max };
       if (!res.valido) {
         this.tremer(dr, dc);
-        this.atualizarHud(res.desmaiou ? "Sem energia: desmaiou." : `Recusado: ${res.motivo}.`);
+        this.atualizarHud(`Recusado: ${res.motivo}.`);
       } else {
         await this.animarPasso(res.posicao, dir);
         const [r, c] = res.posicao;
         this.celulas[r][c] = { ...this.celulas[r][c], conteudo: res.celula.conteudo };
         if (res.celula.conteudo === "visitado") this.removerProp(r, c);
+        if (res.pegou_surf) this.surf = true;
         this.atualizarMarcadorCentro();
         this.atualizarHud(this.relato(res));
+        if (res.encontro) await this.lutar(res.encontro, res.celula);
       }
     } catch (erro) {
       this.atualizarHud("erro: " + erro.message);
@@ -443,7 +459,8 @@ export class CenaMundo extends Phaser.Scene {
     }
     if (this.jogador.situacao !== "jogando") {
       this.encerrado = true;
-      this.atualizarHud(`Partida encerrada: ${this.jogador.situacao}${this.jogador.motivo ? " (" + this.jogador.motivo + ")" : ""}.`);
+      const msg = this.jogador.situacao === "vitoria" ? "Voce venceu todos os lideres!" : "Fim de jogo: seu time desmaiou.";
+      this.atualizarHud(`${msg}${this.jogador.motivo ? " (" + this.jogador.motivo + ")" : ""}`);
     }
     this.ocupado = false;
     // sai o passo guardado enquanto este estava em voo (so a ultima tecla)
@@ -454,12 +471,41 @@ export class CenaMundo extends Phaser.Scene {
 
   relato(res) {
     const partes = [];
-    if (res.batalhou) partes.push(`batalha (HP -${res.hp_perdido})`);
+    if (res.encontro) partes.push({ selvagem: "selvagem a vista", treinador: "treinador a vista", lider: `${res.encontro.lider} te desafia` }[res.encontro.tipo]);
+    if (res.ginasio_ja_vencido) partes.push("ginasio ja vencido");
     if (res.pegou_pokebola) partes.push("pegou pokebola");
     if (res.pegou_surf) partes.push("pegou Surf: agua liberada");
-    if (res.em_centro) partes.push("no Centro (R recarrega)");
-    if (res.energia_gasta) partes.push(`-${res.energia_gasta} energia`);
+    if (res.curou) partes.push("time curado no Centro");
     return partes.length ? partes.join(", ") + "." : "Passo.";
+  }
+
+  // Abre a batalha do encontro: a cena de batalha toca por cima do mapa e devolve
+  // o resultado quando termina. O mapa so aplica o que a API decidiu.
+  async lutar(encontro, celula) {
+    this.emBatalha = true;
+    document.body.classList.add("em-batalha");
+    const promessa = api3.batalhaNova(this.sessao, encontro.tipo, 1000);
+    promessa.catch(() => {}); // o erro e tratado na cena de batalha
+    this.scene.pause();
+    const saida = await new Promise((resolver) => {
+      this.scene.launch("batalha", { promessa, terreno: celula.terreno, lento: this.fatorTempo, aoFim: resolver });
+    });
+    this.emBatalha = false;
+    if (saida.erro) {
+      this.atualizarHud("Batalha nao abriu: " + saida.erro);
+      return;
+    }
+    if (saida.jogo) this.jogador = saida.jogo;
+    const [r, c] = encontro.posicao;
+    const res = saida.resultado;
+    if (res === "vitoria" && encontro.tipo === "lider") {
+      this.venceu.add(encontro.regiao);
+      for (const [chave] of this.etiquetas) { const [er, ec] = chave.split(",").map(Number); this.pintarEtiqueta(er, ec); }
+    } else if (["vitoria", "fuga", "captura"].includes(res) && encontro.tipo !== "lider") {
+      this.celulas[r][c] = { ...this.celulas[r][c], conteudo: "visitado" };
+      this.removerProp(r, c);
+    }
+    this.atualizarHud({ vitoria: "Batalha vencida.", derrota: "Seu time desmaiou.", fuga: "Voce fugiu.", captura: "Pokemon capturado." }[res] || "Batalha encerrada.");
   }
 
   // Vira o boneco pra direcao `dir` (W/A/S/D) e mostra o quadro parado.
@@ -580,28 +626,20 @@ export class CenaMundo extends Phaser.Scene {
     }
   }
 
-  async recarregar() {
-    this.ocupado = true;
-    try {
-      const res = await api.jogoRecarregar(this.sessao);
-      this.jogador = res.jogador;
-      this.energia = { atual: res.jogador.energia, max: res.jogador.energia_max };
-      this.atualizarHud(res.recarregou ? `Recarregou +${res.entrou} de energia.` : `Sem recarga: ${res.motivo}.`);
-    } catch (erro) {
-      this.atualizarHud("erro: " + erro.message);
-    }
-    this.ocupado = false;
-  }
-
   atualizarHud(mensagem) {
     const el = (id) => document.getElementById(id);
-    if (!el("hud-energia")) return;
-    const pct = this.energia.max ? Math.round((100 * this.energia.atual) / this.energia.max) : 0;
-    el("hud-energia").textContent = `${this.energia.atual} / ${this.energia.max}`;
-    el("hud-barra").style.width = pct + "%";
-    el("hud-hp").textContent = this.jogador.hp_lider;
-    el("hud-surf").textContent = this.jogador.surf ? "sim" : "nao";
-    el("hud-pokemon").textContent = `${this.jogador.pokemon} / ${this.jogador.meta}`;
+    if (!el("hud-time")) return;
+    const j = this.jogador;
+    const hp = j.time.reduce((a, m) => a + m.hp, 0);
+    const hpMax = j.time.reduce((a, m) => a + m.hp_max, 0);
+    const ativo = j.time.find((m) => m.vivo) || j.time[0];
+    el("hud-time").textContent = ativo ? `${ativo.especie} Nv ${ativo.nivel}` : "-";
+    el("hud-hp").textContent = `${hp} / ${hpMax}`;
+    el("hud-barra").style.width = (hpMax ? (100 * hp) / hpMax : 0) + "%";
+    el("hud-bolas").textContent = `${j.pokebolas} bolas, ${j.pocoes} pocoes`;
+    el("hud-dinheiro").textContent = "$" + j.dinheiro;
+    el("hud-lideres").textContent = `${j.lideres.derrotados} / ${j.lideres.total}`;
+    el("hud-surf").textContent = this.surf ? "sim" : "nao";
     const cel = this.celulas[this.lin][this.col];
     el("hud-pos").textContent = `(${this.lin}, ${this.col}) ${NOME_TERRENO[cel.terreno] || cel.terreno}`;
     el("hud-centros").textContent = this.centros.length;
