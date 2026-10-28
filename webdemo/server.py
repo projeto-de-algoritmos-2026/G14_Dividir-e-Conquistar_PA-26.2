@@ -24,7 +24,7 @@ from bench.common import ALGORITMOS, SEEDS, TAMANHOS
 
 from greedy.estrategias import ESTRATEGIAS
 
-from . import api, api_greedy
+from . import api, api_batalha, api_greedy
 from .benchmark import eventos_benchmark
 
 ESTATICOS = Path(__file__).resolve().parent / "static"
@@ -39,6 +39,9 @@ TIPOS = {
     ".svg": "image/svg+xml",
     ".json": "application/json",
 }
+
+# Teto do corpo de um POST (as rotas do T3 recebem JSON de poucas chaves).
+LIMITE_CORPO = 64 * 1024
 
 # Valor de `estrategia` que pede o bot do T1: anda a rota inteira sem parar.
 SEM_ESTRATEGIA = "nenhuma"
@@ -182,6 +185,64 @@ class Manipulador(BaseHTTPRequestHandler):
             return False
         return True
 
+    # ---------------- rotas do trabalho 3 ----------------
+
+    def _rota_t3_get(self, rota, consulta):
+        """GET /api/t3/*: criar partida, mover, ler estado. Devolve False se nao for."""
+        size = api.limitar(_primeiro(consulta, "size"), 3, api.MAX_TAMANHO, 16)
+        seed = api.limitar(_primeiro(consulta, "seed"), 0, api.MAX_SEED, 42)
+        sessao = _primeiro(consulta, "sessao", "")
+        if rota == "/api/t3/jogo/novo":
+            nivel = api.limitar(_primeiro(consulta, "nivel_inicial"), 1, 100,
+                                api_batalha.NIVEL_INICIAL_PADRAO)
+            self._json(api_batalha.criar_jogo(size, seed, nivel))
+        elif rota == "/api/t3/jogo/estado":
+            self._json(api_batalha.estado_jogo(sessao))
+        elif rota == "/api/t3/jogo/mover":
+            self._json(api_batalha.mover_jogo(sessao, _primeiro(consulta, "direcao", "")))
+        elif rota == "/api/t3/batalha/estado":
+            self._json(api_batalha.estado_batalha(_primeiro(consulta, "batalha_id", "")))
+        else:
+            return False
+        return True
+
+    def _rota_t3_post(self, rota, corpo):
+        """POST /api/t3/batalha/*: corpo JSON. Devolve False se nao for."""
+        if rota == "/api/t3/batalha/nova":
+            self._json(api_batalha.batalha_nova(
+                corpo.get("sessao", ""), corpo.get("tipo"), corpo.get("previsao_n")))
+        elif rota == "/api/t3/batalha/acao":
+            self._json(api_batalha.batalha_acao(
+                corpo.get("batalha_id", ""), corpo.get("acao"), golpe=corpo.get("golpe"),
+                item=corpo.get("item"), alvo=corpo.get("alvo")))
+        else:
+            return False
+        return True
+
+    def do_POST(self):
+        rota = urlparse(self.path).path
+        try:
+            tamanho = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            tamanho = -1
+        if not 0 <= tamanho <= LIMITE_CORPO:
+            self.close_connection = True
+            return self._json({"erro": "corpo ausente ou grande demais"}, 400)
+        bruto = self.rfile.read(tamanho)
+        try:
+            corpo = json.loads(bruto.decode("utf-8")) if bruto else {}
+            if not isinstance(corpo, dict):
+                raise ValueError
+        except ValueError:
+            return self._json({"erro": "corpo precisa ser um objeto JSON"}, 400)
+        if rota.startswith("/api/t3/"):
+            try:
+                if self._rota_t3_post(rota, corpo):
+                    return
+            except api_batalha.ErroApi as erro:
+                return self._json({"erro": erro.mensagem}, erro.status)
+        self._json({"erro": "rota desconhecida"}, status=404)
+
     def do_GET(self):
         endereco = urlparse(self.path)
         rota = endereco.path
@@ -201,6 +262,12 @@ class Manipulador(BaseHTTPRequestHandler):
             return self._estatico(rota[len("/static/"):])
         if rota.startswith("/api/t2/") and self._rota_t2(rota, consulta):
             return
+        if rota.startswith("/api/t3/"):
+            try:
+                if self._rota_t3_get(rota, consulta):
+                    return
+            except api_batalha.ErroApi as erro:
+                return self._json({"erro": erro.mensagem}, erro.status)
 
         if rota == "/api/config":
             return self._json({
