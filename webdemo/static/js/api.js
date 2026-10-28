@@ -69,3 +69,42 @@ export function partidaAoVivo({ size, seed, algoritmo, estrategia, energia }, ao
   };
   return { fechar };
 }
+
+// Trabalho 3: jogo com ginasios e batalha turno a turno (/api/t3/*). Contrato em
+// docs/api-batalha-t3.md. Aqui tambem nao mora regra nenhuma: dano, efetividade,
+// ordem dos golpes, captura e fuga chegam prontos na lista de eventos.
+async function pegar3(caminho, parametros = {}) {
+  return chamar3("GET", caminho + consulta(parametros));
+}
+
+async function postar3(caminho, corpo) {
+  return chamar3("POST", caminho, corpo);
+}
+
+async function chamar3(metodo, caminho, corpo) {
+  const opcoes = { method: metodo };
+  if (corpo !== undefined) {
+    opcoes.headers = { "Content-Type": "application/json" };
+    opcoes.body = JSON.stringify(corpo);
+  }
+  const resposta = await fetch("/api/t3" + caminho, opcoes);
+  let dados = null;
+  try {
+    dados = await resposta.json();
+  } catch {
+    // corpo nao e JSON: cai no erro de status abaixo
+  }
+  if (!resposta.ok) {
+    throw new Error((dados && dados.erro) || `${caminho}: HTTP ${resposta.status}`);
+  }
+  return dados;
+}
+
+export const api3 = {
+  jogoNovo: (size, seed, nivelInicial) => pegar3("/jogo/novo", { size, seed, nivel_inicial: nivelInicial }),
+  jogoEstado: (sessao) => pegar3("/jogo/estado", { sessao }),
+  jogoMover: (sessao, direcao) => pegar3("/jogo/mover", { sessao, direcao }),
+  batalhaNova: (sessao, tipo, previsaoN) => postar3("/batalha/nova", { sessao, tipo, previsao_n: previsaoN }),
+  batalhaAcao: (batalhaId, acao, extra = {}) => postar3("/batalha/acao", { batalha_id: batalhaId, acao, ...extra }),
+  batalhaEstado: (batalhaId) => pegar3("/batalha/estado", { batalha_id: batalhaId }),
+};
