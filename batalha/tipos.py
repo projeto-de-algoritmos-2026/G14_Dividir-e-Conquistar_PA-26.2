@@ -17,7 +17,7 @@ psiquico resiste a psiquico, normal e fraco contra pedra). Um desvio, marcado:
 Fire x Psychic = 2.0. Na serie o fogo vence grama, gelo, inseto e aco, que nao
 existem aqui; sem um alvo super efetivo o tipo Fire seria so desvantagem.
 Psychic nao tem alvo 2.0 (os tipos que o vencem na serie nao existem aqui) e se
-sustenta pelos golpes fortes e pela Mew.
+sustenta pelos golpes fortes e pelo Miaupsi.
 """
 
 FIRE, WATER, ROCK, PSYCHIC, NORMAL = "Fire", "Water", "Rock", "Psychic", "Normal"

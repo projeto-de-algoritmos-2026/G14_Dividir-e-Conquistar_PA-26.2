@@ -12,14 +12,14 @@ import models
 
 
 @pytest.fixture
-def pikachu():
-    return models.Pokemon("Faisca", "Male", "Pikachu", "Electric",
+def faisca():
+    return models.Pokemon("Faisca", "Male", "Pikachoque", "Electric",
                           {"Shock": 40, "Tail Whip": 25})
 
 
 @pytest.fixture
-def jogador(pikachu):
-    return models.Player("Lucas", "Male", "Fun", [pikachu],
+def jogador(faisca):
+    return models.Player("Lucas", "Male", "Fun", [faisca],
                          {"potion": 3, "pokeball": 3}, 10000)
 
 

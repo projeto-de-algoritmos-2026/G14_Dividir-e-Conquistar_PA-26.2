@@ -22,14 +22,14 @@ class Pokemon:
 
 
 def generate_rand_pokemon():
-    fuego = Pokemon('fuego', 'female', "Charzard", 'Fire', {'Flamethrower': 20, 'Claw': 15})
-    rocko = Pokemon('rocky', 'male', 'Geodude', 'Rock', {'Rock-throw': 20, 'head-butt': 15})
-    mew = Pokemon('mew', 'neutral', 'Mew', 'Psychic', {'Mind-beam': 20, 'Psychic-slam': 25})
-    snore = Pokemon('snore', 'male', 'Snorlax', 'Normal', {'Body-slam': 20, 'Slap': 15})
-    rocky = Pokemon('rocky', 'female', 'Onyx', 'Normal', {'Body-slam': 20, 'Slap': 15})
-    coolio = Pokemon('coolio', 'male', 'Squirtle', 'Water', {"Hydropump": 35, 'Bite': 20})
-    charred = Pokemon('charred', 'female', 'Charmander', 'Fire', {'Bite': 20, 'Fire-blast': 25})
-    return random.choice([fuego, rocko, mew, snore, rocky, coolio, charred])
+    fuego = Pokemon('fuego', 'female', "Charzardo", 'Fire', {'Flamethrower': 20, 'Claw': 15})
+    rocko = Pokemon('rocky', 'male', 'Geobruto', 'Rock', {'Rock-throw': 20, 'head-butt': 15})
+    miau = Pokemon('miau', 'neutral', 'Miaupsi', 'Psychic', {'Mind-beam': 20, 'Psychic-slam': 25})
+    snore = Pokemon('snore', 'male', 'Sonolax', 'Normal', {'Body-slam': 20, 'Slap': 15})
+    rocky = Pokemon('rocky', 'female', 'Onixo', 'Normal', {'Body-slam': 20, 'Slap': 15})
+    coolio = Pokemon('coolio', 'male', 'Squirtuga', 'Water', {"Hydropump": 35, 'Bite': 20})
+    charred = Pokemon('charred', 'female', 'Chamandrel', 'Fire', {'Bite': 20, 'Fire-blast': 25})
+    return random.choice([fuego, rocko, miau, snore, rocky, coolio, charred])
 
 
 @dataclass

@@ -25,7 +25,7 @@ class TestPokemon:
 
 
 class TestGenerateRandPokemon:
-    NOMES = {"fuego", "rocky", "mew", "snore", "coolio", "charred"}
+    NOMES = {"fuego", "rocky", "miau", "snore", "coolio", "charred"}
 
     def test_sorteia_do_elenco_conhecido(self):
         for _ in range(50):
@@ -47,14 +47,14 @@ class TestPlayer:
         assert p.pokemon_list == []
         assert p.bag == {}
 
-    def test_poke_list_names(self, jogador, pikachu):
-        assert jogador.poke_list_names() == [pikachu.name]
+    def test_poke_list_names(self, jogador, faisca):
+        assert jogador.poke_list_names() == [faisca.name]
 
-    def test_change_poke_devolve_o_objeto_pelo_nome(self, jogador, pikachu):
-        outro = models.Pokemon("Bulba", "Male", "Bulbasaur", "Grass", {"Vine": 20})
+    def test_change_poke_devolve_o_objeto_pelo_nome(self, jogador, faisca):
+        outro = models.Pokemon("Bulba", "Male", "Folhassauro", "Grass", {"Vine": 20})
         jogador.pokemon_list.append(outro)
         assert jogador.change_poke("Bulba") is outro
-        assert jogador.change_poke("Faisca") is pikachu
+        assert jogador.change_poke("Faisca") is faisca
 
     def test_repr_eh_o_emoji_de_saudacao(self, jogador):
         assert repr(jogador) == "\U0001FAE1"

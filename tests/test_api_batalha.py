@@ -43,9 +43,9 @@ def fortalecer(sessao, nivel=100, quantos=3):
     equipe = sessao["equipe"]
     equipe.clear()
     sessao["player"].pokemon_list.clear()
-    for i, (esp, tipo, golpes) in enumerate([("Mew", "Psychic", {"Mind-beam": 1, "Psychic-slam": 1}),
-                                             ("Squirtle", "Water", {"Hydropump": 1, "Bite": 1}),
-                                             ("Snorlax", "Normal", {"Body-slam": 1, "Slap": 1})][:quantos]):
+    for i, (esp, tipo, golpes) in enumerate([("Miaupsi", "Psychic", {"Mind-beam": 1, "Psychic-slam": 1}),
+                                             ("Squirtuga", "Water", {"Hydropump": 1, "Bite": 1}),
+                                             ("Sonolax", "Normal", {"Body-slam": 1, "Slap": 1})][:quantos]):
         p = Pokemon(name=f"{esp}-forte", type_of_pokemon=tipo, moves=golpes, level=nivel)
         sessao["player"].pokemon_list.append(p)
         equipe.append(Combatente.de_pokemon(p))
@@ -138,7 +138,7 @@ class TestMover:
         assert res["encontro"]["posicao"] == list(pos)
         assert "regiao" in res["encontro"]
         assert sessao["mapa"].celula(*pos).occupied_with == conteudo   # nao consumida
-        assert sessao["player"].pokemon_list[0].level == 35            # nada de batalha oculta
+        assert sessao["player"].pokemon_list[0].level == api_batalha.NIVEL_INICIAL_PADRAO == 8            # nada de batalha oculta
 
     def test_encontro_de_lider_traz_os_dados_do_ginasio(self, jogo):
         sid, sessao, _ = jogo
@@ -185,7 +185,7 @@ class TestBatalha:
         assert b["previsao"]["n"] == 1000
         assert {"vitoria", "hp_restante", "turnos"} <= set(b["previsao"])
         assert 1 <= b["adversario"]["nivel"] <= 100
-        assert 0.20 <= b["adversario"]["percentil"] <= 0.50
+        assert api_batalha.niveis.FAIXA_SELVAGEM[0] <= b["adversario"]["percentil"] <= api_batalha.niveis.FAIXA_SELVAGEM[1]
 
     def test_nova_sem_encontro_ou_com_tipo_errado(self, jogo):
         sid, sessao, _ = jogo
@@ -270,7 +270,7 @@ class TestBatalha:
         if res["estado"]["resultado"] == "captura":
             assert len(sessao["player"].pokemon_list) == 2 == len(sessao["equipe"])
 
-    def test_derrota_encerra_a_partida(self):
+    def test_derrota_nao_encerra_e_volta_a_origem_sem_centro(self):
         dados = api_batalha.criar_jogo(SIZE, SEED, nivel_inicial=1)
         sid = dados["sessao"]
         sessao = api_batalha._sessoes[sid]
@@ -278,12 +278,46 @@ class TestBatalha:
         api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.GINASIO, pos))
         b = api_batalha.batalha_nova(sid, "lider")
         assert b["previsao"]["vitoria"] == 0.0
+        dinheiro = sessao["player"].money
         _, final = jogar_ate_o_fim(b["batalha_id"])
         assert final["resultado"] == "derrota"
-        assert sessao["situacao"] == "derrota"
-        with pytest.raises(ErroApi) as e:
-            api_batalha.mover_jogo(sid, "A")
-        assert e.value.status == 409
+        # o jogo segue: volta pra origem, time curado, metade do dinheiro
+        assert sessao["situacao"] == "jogando"
+        assert sessao["mapa"].posicao == (0, 0)
+        assert all(c.hp == c.hp_max for c in sessao["equipe"])
+        assert sessao["player"].money == dinheiro - dinheiro // 2
+        ud = api_batalha.estado_jogo(sid)["jogador"]["ultima_derrota"]
+        assert ud == {"n": 1, "para": [0, 0], "local": "origem", "adversario": "lider",
+                      "dinheiro_perdido": dinheiro // 2, "dinheiro": sessao["player"].money}
+        assert api_batalha.estado_jogo(sid)["jogador"]["derrotas"] == 1
+        # o lider continua la e a sessao aceita andar de novo
+        assert sessao["mapa"].celula(*pos).occupied_with == grid_mod.GINASIO
+        assert sessao["encontro"] is None and sessao["batalha_id"] is None
+        assert api_batalha.mover_jogo(sid, "D")["valido"] in (True, False)
+
+    def test_derrota_volta_ao_ultimo_centro_visitado(self):
+        dados = api_batalha.criar_jogo(SIZE, SEED, nivel_inicial=1)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        res = api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.CENTRO, (3, 4)))
+        assert res["em_centro"] and sessao["ultimo_centro"] == (3, 4)
+        pos = next(p for p in sessao["mapa"].ginasios() if p[1] > 0)
+        api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.GINASIO, pos))
+        b = api_batalha.batalha_nova(sid, "lider")
+        jogar_ate_o_fim(b["batalha_id"])
+        assert sessao["mapa"].posicao == (3, 4)
+        ud = api_batalha.estado_jogo(sid)["jogador"]["ultima_derrota"]
+        assert ud["local"] == "centro" and ud["para"] == [3, 4]
+
+    def test_segunda_derrota_conta_e_o_dinheiro_cai_de_novo(self):
+        dados = api_batalha.criar_jogo(SIZE, SEED, nivel_inicial=1)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        pos = next(p for p in sessao["mapa"].ginasios() if p[1] > 0)
+        for _ in range(2):
+            api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.GINASIO, pos))
+            jogar_ate_o_fim(api_batalha.batalha_nova(sid, "lider")["batalha_id"])
+        assert sessao["derrotas"] == 2 and sessao["player"].money == 10000 // 4
 
     def test_derrotar_o_lider_marca_o_ginasio_e_ele_vira_so_predio(self):
         dados = api_batalha.criar_jogo(SIZE, SEED)
@@ -400,3 +434,146 @@ class TestHttp:
         assert all(c["conteudo"] != "ginasio" for linha in dados["celulas"] for c in linha)
         status, cfg = get(f"{base}/api/t2/config")
         assert status == 200 and "estrategias" in cfg
+
+
+# ---------------- etapa 4: contrato aditivo, trocas e subida de nivel reais ----------------
+
+# Seed e celula em que o primeiro selvagem pode ser capturado dentro de 14 turnos pelo
+# fluxo `capturar_segundo` abaixo (golpe 0 ate o HP dele baixar de 35%, depois pokebola).
+# Na seed 2 do mapa 12x12: o inicial e um Sonolax, o capturado e um Miaupsi nivel 5.
+SEED_CAPTURA, TAMANHO_CAPTURA, CELULA_CAPTURA = 2, 12, (1, 3)
+
+
+def capturar_segundo(seed=SEED_CAPTURA, size=TAMANHO_CAPTURA, pos=CELULA_CAPTURA):
+    dados = api_batalha.criar_jogo(size, seed)
+    sid = dados["sessao"]
+    sessao = api_batalha._sessoes[sid]
+    api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON, pos))
+    b = api_batalha.batalha_nova(sid, "selvagem", previsao_n=50)
+    est = b
+    for _ in range(14):
+        o = est["oponente"]["ativo"]
+        if o["hp"] / o["hp_max"] > 0.35:
+            r = api_batalha.batalha_acao(b["batalha_id"], "lutar", golpe=0)
+        else:
+            r = api_batalha.batalha_acao(b["batalha_id"], "mochila", item="pokebola")
+        est = r["estado"]
+        if est["estado"] == "fim":
+            break
+    return sid, sessao, est
+
+
+class TestContratoAditivo:
+    def test_golpe_e_errou_trazem_tipo_golpe(self):
+        dados = api_batalha.criar_jogo(SIZE, SEED)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON))
+        b = api_batalha.batalha_nova(sid, "selvagem", previsao_n=20)
+        eventos, _ = jogar_ate_o_fim(b["batalha_id"])
+        com_golpe = [e for e in eventos if e["tipo"] in ("golpe", "errou")]
+        assert com_golpe
+        from batalha.tipos import TIPOS
+        assert all(e["tipo_golpe"] in TIPOS for e in com_golpe)
+        # o tipo bate com o do golpe no estado do jogador
+        meus = {g["nome"]: g["tipo"] for g in b["jogador"]["golpes"]}
+        assert all(e["tipo_golpe"] == meus[e["golpe"]] for e in com_golpe if e["quem"] == "jogador")
+
+    def test_estado_traz_xp_nivel_atual_e_proximo(self):
+        dados = api_batalha.criar_jogo(SIZE, SEED)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON))
+        b = api_batalha.batalha_nova(sid, "selvagem", previsao_n=20)
+        ativo = b["jogador"]["ativo"]
+        assert ativo["nivel"] == 8
+        assert ativo["xp"] == ativo["xp_nivel_atual"] == 8 ** 3
+        assert ativo["xp_proximo_nivel"] == 9 ** 3
+
+    def test_nivel_maximo_nao_tem_proximo(self):
+        dados = api_batalha.criar_jogo(SIZE, SEED, nivel_inicial=100)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON))
+        ativo = api_batalha.batalha_nova(sid, "selvagem", previsao_n=20)["jogador"]["ativo"]
+        assert ativo["xp_nivel_atual"] == 100 ** 3 and ativo["xp_proximo_nivel"] is None
+
+
+class TestSubidaDeNivelReal:
+    def test_xp_de_batalhas_reais_sobe_o_nivel_do_inicial(self):
+        """Sem fortalecer nada e sem mexer em xp: o nivel 8 vira 9 jogando selvagens da seed."""
+        dados = api_batalha.criar_jogo(SIZE, SEED)
+        sid = dados["sessao"]
+        sessao = api_batalha._sessoes[sid]
+        subiu = None
+        for n in range(8):
+            api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON, (5, 5 + (n % 2))))
+            b = api_batalha.batalha_nova(sid, "selvagem", previsao_n=20)
+            eventos, final = jogar_ate_o_fim(b["batalha_id"])
+            if final["resultado"] == "derrota":
+                continue
+            xps = [e for e in eventos if e["tipo"] == "xp"]
+            for e in xps:
+                assert e["xp_total"] - e["ganho"] >= e["xp_nivel_antes"]
+                assert e["xp_nivel_atual"] <= e["xp_total"] < e["xp_proximo_nivel"]
+                if e["nivel_depois"] > e["nivel_antes"]:
+                    subiu = e
+            if subiu:
+                break
+        assert subiu, "nenhuma subida de nivel em 8 selvagens"
+        assert subiu["nivel_depois"] == subiu["nivel_antes"] + 1
+        assert sessao["equipe"][0].nivel == subiu["nivel_depois"]
+        assert sessao["player"].pokemon_list[0].level == subiu["nivel_depois"]
+
+
+class TestTrocas:
+    def test_captura_na_seed_documentada_entrega_o_segundo_pokemon(self):
+        sid, sessao, est = capturar_segundo()
+        assert est["resultado"] == "captura"
+        assert [c.especie for c in sessao["equipe"]] == ["Sonolax", "Miaupsi"]
+        assert len(sessao["player"].pokemon_list) == 2
+
+    def _batalha_com_dois(self):
+        sid, sessao, _ = capturar_segundo()
+        api_batalha.mover_jogo(sid, colocar_ao_lado(sessao, grid_mod.POKEMON, (5, 5)))
+        b = api_batalha.batalha_nova(sid, "selvagem", previsao_n=20)
+        return sid, sessao, b
+
+    def test_troca_voluntaria_gasta_o_turno_e_a_cpu_ataca(self):
+        sid, sessao, b = self._batalha_com_dois()
+        assert "pokemon" in b["acoes_validas"]
+        res = api_batalha.batalha_acao(b["batalha_id"], "pokemon", alvo=1)
+        troca, *resto = res["eventos"]
+        assert troca["tipo"] == "troca" and troca["forcada"] is False and troca["indice"] == 1
+        assert troca["de"].startswith("Sonolax") and troca["para"].startswith("Miaupsi")
+        assert resto and resto[0]["quem"] == "oponente"           # o turno foi gasto
+        assert res["estado"]["turno"] == 1
+        ativo = res["estado"]["jogador"]["ativo"]
+        assert ativo["especie"] == "Miaupsi"
+        assert [m["ativo"] for m in res["estado"]["jogador"]["time"]] == [False, True]
+
+    def test_troca_pro_que_ja_esta_em_campo_e_recusada(self):
+        _, _, b = self._batalha_com_dois()
+        with pytest.raises(ErroApi) as e:
+            api_batalha.batalha_acao(b["batalha_id"], "pokemon", alvo=0)
+        assert e.value.status == 400
+
+    def test_troca_forcada_apos_desmaio_nao_gasta_turno(self):
+        sid, sessao, b = self._batalha_com_dois()
+        sessao["equipe"][0].hp = 1                      # o proximo golpe do selvagem derruba
+        for _ in range(12):
+            res = api_batalha.batalha_acao(b["batalha_id"], "lutar", golpe=0)
+            if res["estado"]["estado"] == "troca_forcada":
+                break
+        assert res["estado"]["estado"] == "troca_forcada"
+        assert res["estado"]["acoes_validas"] == ["pokemon"]
+        assert any(e["tipo"] == "desmaio" and e["quem"] == "jogador" for e in res["eventos"])
+        with pytest.raises(ErroApi):                     # so troca e aceita
+            api_batalha.batalha_acao(b["batalha_id"], "lutar", golpe=0)
+        turno = res["estado"]["turno"]
+        res = api_batalha.batalha_acao(b["batalha_id"], "pokemon", alvo=1)
+        assert res["eventos"] == [{"tipo": "troca", "quem": "jogador", "de": res["eventos"][0]["de"],
+                                   "para": res["eventos"][0]["para"], "indice": 1, "forcada": True}]
+        assert res["estado"]["turno"] == turno           # nao gastou turno
+        assert res["estado"]["estado"] == "aguardando_acao"
+        assert res["estado"]["jogador"]["ativo"]["especie"] == "Miaupsi"

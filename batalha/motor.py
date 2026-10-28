@@ -28,7 +28,7 @@ batalha. Ordem dos sorteios no turno: desempate de velocidade, escolha de
 golpe da CPU, e por golpe: precisao, critico, variacao.
 """
 from batalha import cpu as cpu_mod
-from batalha.combatente import NIVEL_MAX
+from batalha.combatente import NIVEL_MAX, xp_do_nivel
 from batalha.dano import calcular_dano, sortear_ataque
 from batalha.tipos import multiplicador
 
@@ -54,6 +54,11 @@ def chance_captura(hp, hp_max):
 
 def chance_fuga(vel_jogador, vel_selvagem, tentativas_antes):
     return min(1.0, 0.5 * vel_jogador / max(1, vel_selvagem) + 0.1 * tentativas_antes)
+
+
+def xp_proximo(nivel):
+    """XP total pra chegar ao nivel seguinte, ou None no nivel maximo."""
+    return xp_do_nivel(nivel + 1) if nivel < NIVEL_MAX else None
 
 
 def xp_por_derrota(nivel_derrotado, tipo):
@@ -262,14 +267,14 @@ class Batalha:
         acertou, critico, variacao = sortear_ataque(self.rng, golpe)
         if not acertou:
             eventos.append({"tipo": "errou", "quem": lado, "pokemon": atacante.nome,
-                            "golpe": golpe.nome})
+                            "golpe": golpe.nome, "tipo_golpe": golpe.tipo})
         else:
             dano = calcular_dano(atacante, golpe, alvo, critico, variacao)
             antes = alvo.hp
             alvo.hp = max(0, alvo.hp - dano)
             eventos.append({
                 "tipo": "golpe", "quem": lado, "pokemon": atacante.nome, "golpe": golpe.nome,
-                "efetividade": multiplicador(golpe.tipo, alvo.tipo), "critico": critico,
+                "tipo_golpe": golpe.tipo, "efetividade": multiplicador(golpe.tipo, alvo.tipo), "critico": critico,
                 "dano": antes - alvo.hp, "hp_antes": antes, "hp_depois": alvo.hp,
                 "hp_max": alvo.hp_max, "alvo": alvo.nome,
                 "pp_restante": None if indice is None else golpe.pp,
@@ -300,7 +305,12 @@ class Batalha:
                 antes, depois = ativo.ganhar_xp(ganho)
                 eventos.append({"tipo": "xp", "pokemon": ativo.nome, "ganho": ganho,
                                 "xp_total": ativo.xp, "nivel_antes": antes,
-                                "nivel_depois": depois, "hp": ativo.hp, "hp_max": ativo.hp_max})
+                                "nivel_depois": depois, "hp": ativo.hp, "hp_max": ativo.hp_max,
+                                # limites das barras: do nivel de antes e do de depois
+                                "xp_nivel_antes": xp_do_nivel(antes),
+                                "xp_proximo_nivel_antes": xp_proximo(antes),
+                                "xp_nivel_atual": xp_do_nivel(depois),
+                                "xp_proximo_nivel": xp_proximo(depois)})
         restantes = [(i, c) for i, c in enumerate(self.oponentes) if c.vivo]
         if not restantes:
             if self.recompensas and self.tipo != SELVAGEM:
@@ -340,8 +350,8 @@ class Batalha:
             "resultado": self.resultado,
             "acoes_validas": self.acoes_validas(),
             "jogador": {
-                "ativo": {**ficha(eu), "xp": eu.xp, "xp_proximo_nivel": (eu.nivel + 1) ** 3
-                          if eu.nivel < NIVEL_MAX else None},
+                "ativo": {**ficha(eu), "xp": eu.xp, "xp_nivel_atual": xp_do_nivel(eu.nivel),
+                          "xp_proximo_nivel": xp_proximo(eu.nivel)},
                 "time": [ficha(c, i, i == self.ativo) for i, c in enumerate(self.equipe)],
                 "golpes": [{"indice": i, "nome": g.nome, "tipo": g.tipo, "poder": g.poder,
                             "precisao": g.precisao, "pp": g.pp, "pp_max": g.pp_max}

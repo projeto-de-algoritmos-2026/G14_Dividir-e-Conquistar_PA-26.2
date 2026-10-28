@@ -46,7 +46,7 @@ class TestNiveis:
         rng = random.Random(9)
         for _ in range(200):
             c, p, nivel = niveis.montar_selvagem(reg, rng)
-            assert 0.20 <= p <= 0.50
+            assert niveis.FAIXA_SELVAGEM[0] <= p <= niveis.FAIXA_SELVAGEM[1]
             assert nivel == ordenada[indice_do_percentil(len(ordenada), p)]
             assert c.nivel == nivel == c.pokemon.level
 
@@ -66,7 +66,7 @@ class TestNiveis:
 
     def test_treinador_percentil_na_faixa_e_varia_entre_celulas(self):
         ps = {niveis.percentil_treinador(5, (r, c)) for r in range(8) for c in range(8)}
-        assert all(0.40 <= p <= 0.70 for p in ps)
+        assert all(niveis.FAIXA_TREINADOR[0] <= p <= niveis.FAIXA_TREINADOR[1] for p in ps)
         assert len(ps) > 30
 
     def test_treinador_nivel_vem_da_populacao_da_regiao(self, mapa):
