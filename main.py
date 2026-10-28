@@ -27,7 +27,11 @@ def parse_args():
                    help="tamanho do tanque de energia; sem ele a partida nao usa energia")
     p.add_argument("--estrategia", choices=ESTRATEGIAS, default=None,
                    help="onde o bot para pra recarregar (exige --bot e --energia)")
+    p.add_argument("--ginasios", action="store_true",
+                   help="gera ginasios (G) e populacoes por regiao (modo humano, trabalho 3)")
     args = p.parse_args()
+    if args.ginasios and args.bot:
+        p.error("--ginasios ainda nao funciona com --bot")
     if args.energia is not None and args.energia <= 0:
         p.error("--energia deve ser positiva")
     if args.estrategia is not None and not (args.bot and args.energia):
@@ -56,4 +60,4 @@ if __name__ == "__main__":
                 f"{resultado.energia_desperdicada} energy wasted."
             )
     else:
-        playing_game(player, size=args.size, seed=args.seed)
+        playing_game(player, size=args.size, seed=args.seed, ginasios=args.ginasios)

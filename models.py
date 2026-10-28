@@ -15,6 +15,10 @@ class Pokemon:
     nature: str = 'normal'
     moves: dict[str, int] = field(default_factory=dict)
     health: int = 100
+    # Nivel entrou no trabalho 3 (lideres de ginasio). O default mantem T1 e T2
+    # identicos: nenhuma regra de batalha le o campo, e quem constroi Pokemon
+    # sem passar level continua recebendo 1.
+    level: int = 1
 
 
 def generate_rand_pokemon():
