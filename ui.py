@@ -86,8 +86,10 @@ def choose_starter_pokemon(starter_pokemon):
         return Pokemon(name, random.choice(["Male", "Female"]), "Squirtle", 'Water', {'Hydropump': 40, 'Tackle': 25})
 
 
-def playing_game(player, size=8, seed=None):
-    grid = Grid(size=size, seed=seed)
+def playing_game(player, size=8, seed=None, ginasios=False):
+    # So repassa a flag quando ligada: chamada sem ela fica igual a do T1/T2.
+    extra = {'ginasios': True} if ginasios else {}
+    grid = Grid(size=size, seed=seed, **extra)
     while not partida_encerrada(player):
         passo_do_jogador(grid, player)
     if len(player.pokemon_list) >= 4:

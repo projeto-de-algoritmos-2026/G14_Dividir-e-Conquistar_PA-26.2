@@ -146,10 +146,14 @@ def mover(grid, player: Player, direcao: str, automatico: bool = False) -> Movim
             battle(player, 'wild pokemon')
         batalhou = True
 
-    # Centro e predio: continua no mapa depois de pisado, pra servir de
-    # parada de novo. Todo o resto vira VISITADO como no trabalho 1.
+    elif destino.occupied_with == grid_mod.GINASIO:
+        # Batalha de ginasio e a fase 4 do trabalho 3. Por ora so avisa.
+        print("Ginasio em construcao.")
+
+    # Centro e ginasio sao predios: continuam no mapa depois de pisados.
+    # Todo o resto vira VISITADO como no trabalho 1.
     em_centro = destino.occupied_with == grid_mod.CENTRO
-    if not em_centro:
+    if not em_centro and destino.occupied_with != grid_mod.GINASIO:
         destino.occupied_with = grid_mod.VISITADO
     grid.row_pos, grid.col_pos = rr, cc
 
