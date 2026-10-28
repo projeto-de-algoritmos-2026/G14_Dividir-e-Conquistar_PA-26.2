@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>G14 - Mundo 2.5D</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{--ink:#0b0f14;--surface:#111821;--border:#243040;--text:#f1f4f8;--muted:#8a97a8;--jade:#12b7a3;--amber:#f2b84b;
+    --mono:ui-monospace,"IBM Plex Mono",SFMono-Regular,Menlo,Consolas,monospace;--sans:ui-sans-serif,system-ui,"Inter","Segoe UI",Roboto,sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--text);font-family:var(--sans);font-size:13px;overflow:hidden}
+  #jogo{position:fixed;inset:0}
+  #jogo canvas{display:block}
+  .hud{position:fixed;top:12px;left:12px;width:250px;padding:12px 14px;background:rgba(17,24,33,.9);border:1px solid var(--border);border-radius:10px;z-index:5;pointer-events:none}
+  .hud h1{margin:0 0 8px;font-size:13px;letter-spacing:.02em}
+  .hud h1 small{color:var(--muted);font-weight:500;margin-left:6px}
+  .linha{display:flex;justify-content:space-between;gap:10px;margin:3px 0}
+  .linha span:first-child{color:var(--muted)}
+  .linha b{font:600 12px var(--mono)}
+  .barra{height:6px;background:#1c2736;border-radius:3px;margin:2px 0 6px;overflow:hidden}
+  .barra i{display:block;height:100%;width:100%;background:var(--jade);transition:width .15s}
+  #hud-msg{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--amber);min-height:34px}
+  .dica{position:fixed;bottom:12px;left:12px;color:var(--muted);font:11px var(--mono);z-index:5;pointer-events:none}
+  kbd{font:600 11px var(--mono);background:#172130;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--text)}
+</style>
+</head>
+<body>
+<div id="jogo"></div>
+<aside class="hud">
+  <h1>Mundo 2.5D<small>base</small></h1>
+  <div class="linha"><span>Energia</span><b id="hud-energia">-</b></div>
+  <div class="barra"><i id="hud-barra"></i></div>
+  <div class="linha"><span>HP do lider</span><b id="hud-hp">-</b></div>
+  <div class="linha"><span>Pokemon</span><b id="hud-pokemon">-</b></div>
+  <div class="linha"><span>Surf</span><b id="hud-surf">-</b></div>
+  <div class="linha"><span>Posicao</span><b id="hud-pos">-</b></div>
+  <div class="linha"><span>Centros no mapa</span><b id="hud-centros">-</b></div>
+  <div id="hud-msg"></div>
+</aside>
+<div class="dica"><kbd>setas</kbd>/<kbd>WASD</kbd> andam pelas diagonais &middot; <kbd>R</kbd> recarrega no Centro &middot; roda do mouse = zoom &middot; ?size=&amp;seed=&amp;energia=</div>
+<script src="/static/vendor/phaser.min.js"></script>
+<script type="module" src="/static/js/mundo/main.js"></script>
+</body>
+</html>
