@@ -38,6 +38,9 @@ FAIXA_TREINADOR_LONGE = (0.30, 0.60)
 FAIXA_SELVAGEM = (FAIXA_SELVAGEM_PERTO[0], FAIXA_SELVAGEM_LONGE[1])
 FAIXA_TREINADOR = (FAIXA_TREINADOR_PERTO[0], FAIXA_TREINADOR_LONGE[1])
 TAMANHO_TIME_TREINADOR = 2
+# Colado na origem (t abaixo disso) o treinador leva um Pokemon so: o jogador nasce
+# com um e um 1 contra 2 no nivel 8 nao e vencivel.
+T_TREINADOR_SOLO = 0.25
 
 _NOMES_TREINADOR = ["Jenny", "James", "Jamal", "Drizzy", "Sam", "Rachel", "Bruna", "Caio"]
 
@@ -102,8 +105,9 @@ def montar_treinador(regiao, seed, posicao, selecionar_fn=selecionar, t=None):
                                     FAIXA_TREINADOR))      # o mesmo de percentil_treinador
     nivel = nivel_no_percentil(regiao.populacao, percentil, selecionar_fn)
     nome = rng.choice(_NOMES_TREINADOR)
+    tamanho = 1 if t is not None and t < T_TREINADOR_SOLO else TAMANHO_TIME_TREINADOR
     time = [Combatente.de_pokemon(_pokemon(rng, f"{nome}-{i + 1}", nivel))
-            for i in range(TAMANHO_TIME_TREINADOR)]
+            for i in range(tamanho)]
     return nome, time, percentil, nivel
 
 

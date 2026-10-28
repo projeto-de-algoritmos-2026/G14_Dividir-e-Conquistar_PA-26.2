@@ -505,7 +505,39 @@ export class CenaMundo extends Phaser.Scene {
       this.celulas[r][c] = { ...this.celulas[r][c], conteudo: "visitado" };
       this.removerProp(r, c);
     }
+    if (res === "derrota" && saida.jogo?.ultima_derrota) {
+      this.voltarDaDerrota(saida.jogo.ultima_derrota);
+      return;
+    }
     this.atualizarHud({ vitoria: "Batalha vencida.", derrota: "Seu time desmaiou.", fuga: "Voce fugiu.", captura: "Pokemon capturado." }[res] || "Batalha encerrada.");
+  }
+
+  // Derrota nao acaba o jogo: a API ja levou o jogador ao ultimo Centro (ou a
+  // origem), curou o time e tirou metade do dinheiro. Aqui so reposiciona o
+  // boneco e avisa na tela.
+  voltarDaDerrota(ud) {
+    const [r, c] = ud.para;
+    const topo = topoDe(r, c, ALTURA[this.celulas[r][c].terreno]);
+    this.lin = r;
+    this.col = c;
+    this.ponto.x = topo.x; this.ponto.y = topo.y;
+    this.sombraJogador.setPosition(topo.x, topo.y);
+    this.anelJogador.setPosition(topo.x, topo.y);
+    this.spriteJogador.setPosition(topo.x, topo.y + 3);
+    this.virar("S", 0);
+    this.depthJogador(r);
+    this.cameras.main.flash(420, 255, 255, 255);
+    this.atualizarMarcadorCentro();
+    const onde = ud.local === "centro" ? "no ultimo Centro" : "no ponto de partida";
+    const texto = `Seu time desmaiou. Voce acordou ${onde}, com o time curado e $${ud.dinheiro_perdido} a menos.`;
+    this.atualizarHud(texto);
+    const faixa = document.getElementById("faixa-derrota");
+    if (faixa) {
+      faixa.innerHTML = `<b>Derrota ${ud.n}</b><span>${texto}</span>`;
+      faixa.hidden = false;
+      clearTimeout(this.tFaixa);
+      this.tFaixa = setTimeout(() => { faixa.hidden = true; }, 6000);
+    }
   }
 
   // Vira o boneco pra direcao `dir` (W/A/S/D) e mostra o quadro parado.

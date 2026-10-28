@@ -156,3 +156,18 @@ class TestPrevisao:
     def test_n_invalido(self):
         with pytest.raises(ValueError):
             previsao.prever([_comb()], [_comb()], "selvagem", n=0)
+
+
+class TestTreinadorPerto:
+    def test_colado_na_origem_leva_um_pokemon_so(self, mapa):
+        reg = mapa.regioes[0]
+        _, perto, _, _ = niveis.montar_treinador(reg, 3, (1, 1), t=0.1)
+        _, longe, _, _ = niveis.montar_treinador(reg, 3, (1, 1), t=0.6)
+        _, sem_t, _, _ = niveis.montar_treinador(reg, 3, (1, 1))
+        assert len(perto) == 1 and len(longe) == 2 and len(sem_t) == 2
+
+    def test_faixa_de_percentil_sobe_com_a_distancia(self):
+        rng = random.Random(5)
+        perto = [niveis.percentil_selvagem(rng, 0.0) for _ in range(200)]
+        longe = [niveis.percentil_selvagem(rng, 1.0) for _ in range(200)]
+        assert max(perto) <= niveis.FAIXA_SELVAGEM_PERTO[1] and min(longe) >= niveis.FAIXA_SELVAGEM_LONGE[0]

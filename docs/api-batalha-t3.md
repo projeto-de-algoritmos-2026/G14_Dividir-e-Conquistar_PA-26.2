@@ -814,7 +814,8 @@ Sempre `selecionar(populacao_da_regiao, k)` com `k = indice_do_percentil(n, p)`:
 - selvagem: `p` sorteado a cada encontro numa faixa que sobe com a distancia da celula
   ate a origem, de [0.00, 0.12] (colado na origem) a [0.15, 0.45] (canto oposto);
 - treinador: `p` fixo por treinador, derivado de (seed, posicao), na faixa de
-  [0.00, 0.10] (origem) a [0.30, 0.60] (canto oposto); time de 2 Pokemon;
+  [0.00, 0.10] (origem) a [0.30, 0.60] (canto oposto); time de 2 Pokemon (1 so quando a
+  celula esta a menos de 25% da distancia maxima da origem);
 - lider: o percentil do ginasio (de 0.5 a 0.9, subindo com a distancia da regiao), time de 3.
 
 ### CPU

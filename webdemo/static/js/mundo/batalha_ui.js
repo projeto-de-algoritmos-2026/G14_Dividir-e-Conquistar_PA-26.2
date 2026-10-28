@@ -164,6 +164,7 @@ export class UiBatalha {
       const container = tipo === "menu" ? this.menu : tipo === "golpes" ? this.golpes : this.painel;
       container.hidden = false;
       container.replaceChildren();
+      if (tipo === "lista") container.style.setProperty("--cols", colunas);
       if (tipo === "lista" && titulo) container.append(el("h4", "", titulo));
       if (tipo === "golpes") this.caixa.classList.add("golpes");
       this.cheia(false);
