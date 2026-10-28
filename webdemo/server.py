@@ -192,6 +192,9 @@ class Manipulador(BaseHTTPRequestHandler):
         # A demo do Trabalho 1, intacta, para comparar e como rede de seguranca.
         if rota in ("/t1", "/t1.html"):
             return self._estatico("t1.html")
+        # Interface 2.5D (Phaser). Usa so os endpoints /api/t2/* que ja existem.
+        if rota in ("/mundo", "/mundo.html"):
+            return self._estatico("mundo.html")
         if rota in ("/t1.js", "/t1.css"):
             return self._estatico(rota.lstrip("/"))
         if rota.startswith("/static/"):
