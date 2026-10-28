@@ -3,8 +3,9 @@
 Ideia do trabalho: cada regiao do mapa tem uma populacao grande de pokemon
 selvagens, cada um com um nivel. O lider do ginasio da regiao monta o time com
 nivel igual ao k-esimo da populacao (mediana no primeiro ginasio, percentis
-mais altos nos seguintes). Achar o k-esimo e selecao; a fase 2 troca o
-oraculo abaixo pela selecao O(n) (mediana das medianas).
+mais altos nos seguintes). Achar o k-esimo e selecao: a fase 2 usa a mediana
+das medianas O(n) (dc/mediana_medianas.py); o oraculo abaixo (sorted) fica so
+como gabarito dos testes.
 
 Regiao: o mapa e dividido em blocos de regiao_lado x regiao_lado celulas, em
 ordem de linha (os blocos da borda ficam menores quando size nao e multiplo).
@@ -18,6 +19,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
+from dc.mediana_medianas import selecionar as selecionar_mediana_medianas
 from models import Pokemon
 
 NIVEL_MIN = 1
@@ -41,9 +43,8 @@ _ESPECIES = [
 def selecionar_oraculo(niveis, k):
     """k-esimo menor nivel (k a partir de 0), por ordenacao completa.
 
-    PROVISORIO: e o ORACULO da fase 1, O(n log n). Existe so pra fixar o
-    contrato (niveis, k) -> nivel e servir de gabarito. A fase 2 injeta a
-    selecao O(n) no lugar dele.
+    ORACULO da fase 1, O(n log n). Nao e mais o default: serve de gabarito
+    nos testes da selecao O(n) (dc.mediana_medianas.selecionar).
     """
     return sorted(niveis)[k]
 
@@ -64,8 +65,8 @@ class Lider:
     percentil: float
     k: int
     time: list[Pokemon] = field(default_factory=list)
-    # Ponto de injecao: funcao (niveis, k) -> nivel. Provisoria ate a fase 2.
-    selecionar: callable = selecionar_oraculo
+    # Ponto de injecao: funcao (niveis, k) -> nivel. Default: mediana das medianas.
+    selecionar: callable = selecionar_mediana_medianas
 
     def montar_time(self, niveis, rng, tamanho=TAMANHO_TIME):
         """Monta o time com nivel = k-esimo da populacao (uma selecao so)."""
@@ -99,7 +100,8 @@ def gerar_populacao(rng, tamanho, nivel_min=NIVEL_MIN, nivel_max=NIVEL_MAX):
     return rng.choices(range(nivel_min, nivel_max + 1), k=tamanho)
 
 
-def gerar_regioes(mapa, regiao_lado, populacao_tamanho, selecionar=selecionar_oraculo):
+def gerar_regioes(mapa, regiao_lado, populacao_tamanho,
+                   selecionar=selecionar_mediana_medianas):
     """Divide o mapa em regioes, planta um G por regiao e monta os lideres.
 
     Chamada pelo Grid DEPOIS de gerar celulas e centros, consumindo so o rng
