@@ -35,6 +35,14 @@ DIRECOES = {
 }
 
 
+# Conteudo de celula -> tipo de encontro (so usado com adiar_batalha).
+_ENCONTROS = {
+    grid_mod.POKEMON: "selvagem",
+    grid_mod.CPU: "treinador",
+    grid_mod.GINASIO: "lider",
+}
+
+
 @dataclass
 class Movimento:
     """O que aconteceu numa tentativa de passo.
@@ -62,6 +70,10 @@ class Movimento:
     # precisa pra explicar por que o treinador caiu. Zeradas sem energia.
     custo_terreno: int = 0
     custo_conteudo: int = 0
+    # Trabalho 3. Quando mover() roda com adiar_batalha=True, ele nao luta: diz
+    # com quem o jogador esbarrou ("selvagem", "treinador" ou "lider") e deixa
+    # a batalha, turno a turno, pra quem chamou. Vazio = nada a lutar.
+    encontro: str = ""
 
 
 def partida_encerrada(player: Player) -> str:
@@ -79,8 +91,15 @@ def partida_encerrada(player: Player) -> str:
     return ""
 
 
-def mover(grid, player: Player, direcao: str, automatico: bool = False) -> Movimento:
-    """Tenta mover o jogador uma casa na direcao dada (W, A, S ou D)."""
+def mover(grid, player: Player, direcao: str, automatico: bool = False,
+          adiar_batalha: bool = False) -> Movimento:
+    """Tenta mover o jogador uma casa na direcao dada (W, A, S ou D).
+
+    adiar_batalha (trabalho 3): em vez de resolver a batalha com CPU, selvagem
+    ou ginasio, so sinaliza o encontro em Movimento.encontro e NAO consome a
+    celula (quem chamou a consome quando a batalha acabar). Default False: o
+    comportamento do T1 e do T2 nao muda.
+    """
     tecla = direcao.upper() if direcao else ""
     if tecla not in DIRECOES:
         return Movimento(False, grid.posicao, motivo="direcao desconhecida")
@@ -126,8 +145,11 @@ def mover(grid, player: Player, direcao: str, automatico: bool = False) -> Movim
     batalhou = False
     pegou_pokebola = False
     pegou_surf = False
+    encontro = ""
 
-    if destino.occupied_with == grid_mod.CPU:
+    if adiar_batalha and destino.occupied_with in _ENCONTROS:
+        encontro = _ENCONTROS[destino.occupied_with]
+    elif destino.occupied_with == grid_mod.CPU:
         if automatico:
             battle(player, 'cpu', automatico=True)
         else:
@@ -153,7 +175,7 @@ def mover(grid, player: Player, direcao: str, automatico: bool = False) -> Movim
     # Centro e ginasio sao predios: continuam no mapa depois de pisados.
     # Todo o resto vira VISITADO como no trabalho 1.
     em_centro = destino.occupied_with == grid_mod.CENTRO
-    if not em_centro and destino.occupied_with != grid_mod.GINASIO:
+    if not em_centro and destino.occupied_with != grid_mod.GINASIO and not encontro:
         destino.occupied_with = grid_mod.VISITADO
     grid.row_pos, grid.col_pos = rr, cc
 
@@ -169,6 +191,7 @@ def mover(grid, player: Player, direcao: str, automatico: bool = False) -> Movim
         em_centro=em_centro,
         custo_terreno=terreno,
         custo_conteudo=conteudo,
+        encontro=encontro,
     )
 
 
