@@ -3,6 +3,8 @@ import random
 
 from rich import print
 
+import ginasio
+
 # Conteudo possivel de uma celula.
 INACESSIVEL = 0
 LIVRE = 1
@@ -14,6 +16,9 @@ SURF = 5
 # outros conteudos, nao some quando pisado (e um predio, nao um item), entao
 # o mesmo centro serve pra varias paradas.
 CENTRO = 6
+# GINASIO entrou no trabalho 3. Como o centro, e um predio e nao some quando
+# pisado. So existe quando o Grid e criado com ginasios=True.
+GINASIO = 7
 VISITADO = -1
 
 EMOJI = {
@@ -24,6 +29,7 @@ EMOJI = {
     CPU: "\U0001F94A",
     SURF: "\U0001F3C4",
     CENTRO: "\U0001F3E5",
+    GINASIO: "\U0001F3DB",
     VISITADO: "\U00002705",
 }
 
@@ -42,6 +48,10 @@ TERRENOS = [GRAMA, AGUA, CONCRETO]
 # do 15x15 nao passava por centro nenhum, e sem centro na rota toda estrategia
 # de parada empata.
 DENSIDADE_CENTRO = 0.08
+
+# Padroes da geracao de ginasios (trabalho 3). Valem so com ginasios=True.
+REGIAO_LADO_PADRAO = 8
+POPULACAO_PADRAO = 1000
 
 
 class GridSquare:
@@ -80,11 +90,17 @@ class GridSquare:
 
 
 class Grid:
-    def __init__(self, size=8, seed=None, centros=None):
+    def __init__(self, size=8, seed=None, centros=None, ginasios=False,
+                 regiao_lado=REGIAO_LADO_PADRAO, populacao_tamanho=POPULACAO_PADRAO):
         """size e seed sao o que torna o benchmark da fase 6 reproduzivel.
 
         O RNG e proprio do Grid: dois mapas com a mesma seed sao iguais mesmo
         que outra parte do programa sorteie coisas entre a criacao dos dois.
+
+        ginasios (trabalho 3) fica desligado por padrao: desligado, nenhum
+        numero a mais sai do RNG e o mapa de uma seed e identico ao do T1/T2.
+        Ligado, os ginasios e as populacoes saem DEPOIS de tudo (ver
+        ginasio.py), entao o resto do mapa tambem nao muda.
         """
         self.size = size
         self.seed = seed
@@ -99,6 +115,9 @@ class Grid:
         self.row_pos, self.col_pos = 0, 0
         self._tirar_surf_da_agua()
         self._espalhar_centros(centros)
+        self.regioes = []
+        if ginasios:
+            self.regioes = ginasio.gerar_regioes(self, regiao_lado, populacao_tamanho)
 
     def _espalhar_centros(self, quantidade=None):
         """Transforma celulas LIVRE em CENTRO depois que o mapa ja existe.
@@ -136,6 +155,15 @@ class Grid:
             for r, linha in enumerate(self.grid)
             for c, celula in enumerate(linha)
             if celula.occupied_with == CENTRO
+        ]
+
+    def ginasios(self):
+        """Posicoes dos ginasios (G), em ordem de linha."""
+        return [
+            (r, c)
+            for r, linha in enumerate(self.grid)
+            for c, celula in enumerate(linha)
+            if celula.occupied_with == GINASIO
         ]
 
     def _tirar_surf_da_agua(self):
