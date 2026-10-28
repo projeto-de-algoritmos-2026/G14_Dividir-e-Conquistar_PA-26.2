@@ -21,12 +21,16 @@
   .barra{height:6px;background:#1c2736;border-radius:3px;margin:2px 0 6px;overflow:hidden}
   .barra i{display:block;height:100%;width:100%;background:var(--jade);transition:width .15s}
   #hud-msg{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--amber);min-height:34px}
-  .dica{position:fixed;bottom:12px;left:12px;color:var(--muted);font:11px var(--mono);z-index:5;pointer-events:none}
+  .aviso{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:var(--muted);font:14px var(--mono);z-index:6}
+  .dica{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 14px;background:#0f1722;border:1px solid #3a4a60;border-radius:10px;color:#f1f4f8;font:12px/1.5 var(--sans);text-align:center;z-index:5;pointer-events:none}
+  .dica kbd{margin:0 1px}
+  .dica .sep{color:#6d7c90;margin:0 6px}
   kbd{font:600 11px var(--mono);background:#172130;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--text)}
 </style>
 </head>
 <body>
 <div id="jogo"></div>
+<div id="aviso" class="aviso"></div>
 <aside class="hud">
   <h1>Mundo 2.5D<small>base</small></h1>
   <div class="linha"><span>Energia</span><b id="hud-energia">-</b></div>
@@ -38,7 +42,7 @@
   <div class="linha"><span>Centros no mapa</span><b id="hud-centros">-</b></div>
   <div id="hud-msg"></div>
 </aside>
-<div class="dica"><kbd>setas</kbd>/<kbd>WASD</kbd> andam pelas diagonais &middot; <kbd>R</kbd> recarrega no Centro &middot; roda do mouse = zoom &middot; ?size=&amp;seed=&amp;energia=</div>
+<div class="dica"><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd> ou <kbd>WASD</kbd> andam no grid: cima/baixo trocam de linha, esquerda/direita de coluna<span class="sep">|</span><kbd>R</kbd> recarrega no Centro<span class="sep">|</span>roda do mouse = zoom</div>
 <script src="/static/vendor/phaser.min.js"></script>
 <script type="module" src="/static/js/mundo/main.js"></script>
 </body>
