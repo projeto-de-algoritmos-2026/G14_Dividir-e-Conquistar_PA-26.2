@@ -118,7 +118,7 @@ class TestArestas:
         import models
         mapa.celula(0, 1).terrain = grid.AGUA
         jogador = models.Player("L", "Male", "Fun",
-                                [models.Pokemon("F", "Male", "Pikachu", "Electric",
+                                [models.Pokemon("F", "Male", "Pikachoque", "Electric",
                                                 {"Shock": 40, "Whip": 25})],
                                 {"pokeball": 0, "potion": 0}, 0)
         for pos, _ in arestas((0, 0), mapa, Estado.de(jogador)):

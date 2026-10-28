@@ -13,7 +13,7 @@ from batalha.tipos import FIRE, NORMAL, PSYCHIC, ROCK, TABELA, TIPOS, WATER, mul
 from models import Pokemon
 
 
-def _poke(nome="Charmander-x", tipo="Fire", golpes=None, nivel=50):
+def _poke(nome="Chamandrel-x", tipo="Fire", golpes=None, nivel=50):
     return Pokemon(name=nome, type_of_pokemon=tipo,
                    moves=golpes or {"Bite": 20, "Fire-blast": 25}, level=nivel)
 
@@ -52,11 +52,11 @@ class TestStats:
 
     def test_especie_e_tipo_dos_dois_formatos_do_modelo(self):
         # generate_rand_pokemon: especie em type_of_pokemon, tipo em nature.
-        antigo = Pokemon("fuego", "female", "Charzard", "Fire", {"Claw": 15})
-        assert (especie_de(antigo), tipo_de(antigo)) == ("Charzard", FIRE)
+        antigo = Pokemon("fuego", "female", "Charzardo", "Fire", {"Claw": 15})
+        assert (especie_de(antigo), tipo_de(antigo)) == ("Charzardo", FIRE)
         # Lider: tipo em type_of_pokemon, especie no nome.
-        novo = Pokemon(name="Squirtle-Lider1-1", type_of_pokemon="Water")
-        assert (especie_de(novo), tipo_de(novo)) == ("Squirtle", WATER)
+        novo = Pokemon(name="Squirtuga-Lider1-1", type_of_pokemon="Water")
+        assert (especie_de(novo), tipo_de(novo)) == ("Squirtuga", WATER)
 
     def test_golpes_ate_quatro_e_ficha_do_catalogo(self):
         p = _poke(golpes={"Bite": 1, "Claw": 1, "Slap": 1, "Flamethrower": 1, "Hydropump": 1})

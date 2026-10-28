@@ -31,12 +31,25 @@ TAMANHO_TIME = 3
 PERCENTIL_MIN = 0.5
 PERCENTIL_MAX = 0.9
 
+# Progressao por distancia (etapa 4). O nivel da populacao de cada regiao cresce
+# com a distancia do bloco ate a origem (0, 0): a regiao da origem tem niveis
+# em NIVEIS_ORIGEM, a mais distante em NIVEIS_FUNDO, e as do meio ficam numa
+# interpolacao linear dos dois extremos (a meio caminho: ~27 a ~65). A distancia
+# e a euclidiana do canto mais proximo da origem do bloco, dividida pela maior
+# entre os blocos (t em [0, 1]); com um bloco so, t = 0.
+NIVEIS_ORIGEM = (5, 30)
+NIVEIS_FUNDO = (50, 100)
+# Expoente da assimetria: nivel = piso + (teto - piso) * u**ASSIMETRIA, u uniforme.
+# Acima de 1 a populacao tem mais fracos que fortes (o k-esimo menor de um
+# percentil p fica em p**ASSIMETRIA da faixa). Com 1.0 a populacao e uniforme.
+ASSIMETRIA_POPULACAO = 1.6
+
 _ESPECIES = [
-    ("Charmander", "Fire", {"Bite": 20, "Fire-blast": 25}),
-    ("Squirtle", "Water", {"Hydropump": 35, "Bite": 20}),
-    ("Geodude", "Rock", {"Rock-throw": 20, "head-butt": 15}),
-    ("Snorlax", "Normal", {"Body-slam": 20, "Slap": 15}),
-    ("Mew", "Psychic", {"Mind-beam": 20, "Psychic-slam": 25}),
+    ("Chamandrel", "Fire", {"Bite": 20, "Fire-blast": 25}),
+    ("Squirtuga", "Water", {"Hydropump": 35, "Bite": 20}),
+    ("Geobruto", "Rock", {"Rock-throw": 20, "head-butt": 15}),
+    ("Sonolax", "Normal", {"Body-slam": 20, "Slap": 15}),
+    ("Miaupsi", "Psychic", {"Mind-beam": 20, "Psychic-slam": 25}),
 ]
 
 
@@ -93,11 +106,32 @@ class Regiao:
     lider: Lider | None = None
 
 
-def gerar_populacao(rng, tamanho, nivel_min=NIVEL_MIN, nivel_max=NIVEL_MAX):
-    """Lista de `tamanho` niveis uniformes em [nivel_min, nivel_max]."""
+def gerar_populacao(rng, tamanho, nivel_min=NIVEL_MIN, nivel_max=NIVEL_MAX, assimetria=1.0):
+    """Lista de `tamanho` niveis em [nivel_min, nivel_max].
+
+    Com assimetria 1.0 e uniforme (o comportamento da fase 1). Acima de 1, os
+    niveis baixos aparecem mais (ver ASSIMETRIA_POPULACAO). Sorteia sempre
+    `tamanho` numeros do rng, entao trocar a assimetria nao muda o resto do mapa.
+    """
     if tamanho < 1:
         raise ValueError("populacao precisa de ao menos 1 pokemon")
-    return rng.choices(range(nivel_min, nivel_max + 1), k=tamanho)
+    if assimetria == 1.0:
+        return rng.choices(range(nivel_min, nivel_max + 1), k=tamanho)
+    largura = nivel_max - nivel_min + 1
+    return [nivel_min + min(largura - 1, int(largura * rng.random() ** assimetria))
+            for _ in range(tamanho)]
+
+
+def faixa_de_niveis(t):
+    """(piso, teto) dos niveis de uma regiao a distancia relativa t (0 a 1)."""
+    piso = round(NIVEIS_ORIGEM[0] + (NIVEIS_FUNDO[0] - NIVEIS_ORIGEM[0]) * t)
+    teto = round(NIVEIS_ORIGEM[1] + (NIVEIS_FUNDO[1] - NIVEIS_ORIGEM[1]) * t)
+    return piso, teto
+
+
+def _distancia_origem(l0, c0):
+    """Distancia do canto do bloco mais proximo da origem (0, 0)."""
+    return math.hypot(l0, c0)
 
 
 def gerar_regioes(mapa, regiao_lado, populacao_tamanho,
@@ -114,13 +148,19 @@ def gerar_regioes(mapa, regiao_lado, populacao_tamanho,
 
     rng = mapa.rng
     blocos = math.ceil(mapa.size / regiao_lado)
+    maior = _distancia_origem((blocos - 1) * regiao_lado, (blocos - 1) * regiao_lado)
     regioes = []
+    distancias = {}
     for br in range(blocos):
         for bc in range(blocos):
             l0, l1 = br * regiao_lado, min(mapa.size, (br + 1) * regiao_lado)
             c0, c1 = bc * regiao_lado, min(mapa.size, (bc + 1) * regiao_lado)
-            populacao = gerar_populacao(rng, populacao_tamanho)
+            dist = _distancia_origem(l0, c0)
+            t = dist / maior if maior else 0.0
+            piso, teto = faixa_de_niveis(t)
+            populacao = gerar_populacao(rng, populacao_tamanho, piso, teto, ASSIMETRIA_POPULACAO)
             regioes.append(Regiao(len(regioes), (l0, l1), (c0, c1), populacao))
+            distancias[len(regioes) - 1] = dist
 
     # Um ginasio por regiao, na ordem das regioes.
     com_ginasio = []
@@ -138,6 +178,10 @@ def gerar_regioes(mapa, regiao_lado, populacao_tamanho,
             mapa.grid[pos[0]][pos[1]].occupied_with = grid_mod.GINASIO
             com_ginasio.append((reg, pos))
 
+    # Os percentis (e os nomes) sobem com a distancia da origem: o primeiro
+    # lider e o da regiao mais perto, o ultimo o da mais funda. Empate de
+    # distancia desempata pelo indice da regiao.
+    com_ginasio.sort(key=lambda rp: (distancias[rp[0].indice], rp[0].indice))
     n = len(com_ginasio)
     for i, (reg, pos) in enumerate(com_ginasio):
         percentil = PERCENTIL_MIN if n == 1 else (

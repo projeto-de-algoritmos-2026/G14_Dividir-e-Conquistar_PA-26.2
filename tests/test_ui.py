@@ -24,7 +24,7 @@ def mapa():
 @pytest.fixture
 def andarilho():
     return models.Player("Lucas", "Male", "Fun",
-                         [models.Pokemon("Faisca", "Male", "Pikachu", "Electric",
+                         [models.Pokemon("Faisca", "Male", "Pikachoque", "Electric",
                                          {"Shock": 40, "Tail Whip": 25})],
                          {"pokeball": 0, "potion": 3}, 0)
 
@@ -69,8 +69,8 @@ def test_o_aviso_de_pokebola_saiu_das_regras(mapa, andarilho, capsys):
 
 class TestEscolhaDeInicial:
     @pytest.mark.parametrize("tecla, especie", [
-        ("P", "Pikachu"), ("C", "Charmander"), ("S", "Squirtle"),
-        ("p", "Pikachu"), ("pikachu", "Pikachu"),
+        ("P", "Pikachoque"), ("C", "Chamandrel"), ("S", "Squirtuga"),
+        ("p", "Pikachoque"), ("pikachoque", "Pikachoque"),
     ])
     def test_aceita_a_inicial_pela_primeira_letra(self, monkeypatch, tecla, especie):
         responde(monkeypatch, tecla, "Faisca")
@@ -81,7 +81,7 @@ class TestEscolhaDeInicial:
         de `or`, entao o laco nunca rodava e uma letra invalida caia direto no
         fim da funcao, devolvendo None em silencio."""
         responde(monkeypatch, "Z", "C", "Chama")
-        assert ui.choose_starter_pokemon("Z").type_of_pokemon == "Charmander"
+        assert ui.choose_starter_pokemon("Z").type_of_pokemon == "Chamandrel"
 
     def test_nunca_devolve_none(self, monkeypatch):
         responde(monkeypatch, "9", "", "S", "Jato")

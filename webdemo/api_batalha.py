@@ -31,7 +31,9 @@ from . import api
 # O conteudo "ginasio" so existe no T3; api.CONTEUDO (usado pelo T2) fica como esta.
 CONTEUDO = {**api.CONTEUDO, grid_mod.GINASIO: "ginasio"}
 
-NIVEL_INICIAL_PADRAO = 35
+# O jogador nasce no nivel 8; a populacao da regiao da origem vai de ~5 a ~30
+# (ginasio.NIVEIS_ORIGEM) e cresce com a distancia.
+NIVEL_INICIAL_PADRAO = 8
 MAX_SESSOES = 20
 MAX_BATALHAS = 50
 MAX_PREVISAO = 5000
@@ -106,6 +108,8 @@ def _resumo_jogo(sessao):
         "lideres": {"derrotados": derrotados, "total": total,
                     "regioes_derrotadas": sorted(sessao["lideres_derrotados"])},
         "em_batalha": sessao["batalha_id"],
+        "derrotas": sessao["derrotas"],
+        "ultima_derrota": sessao["ultima_derrota"],
     }
 
 
@@ -132,6 +136,8 @@ def criar_jogo(size, seed, nivel_inicial=NIVEL_INICIAL_PADRAO):
         "tranca": threading.Lock(),
         "encontro": None, "batalha_id": None, "n_batalhas": 0,
         "lideres_derrotados": set(), "situacao": "jogando", "motivo": "",
+        # Pra onde a derrota leva: o ultimo Centro pisado (ou a origem).
+        "ultimo_centro": None, "derrotas": 0, "ultima_derrota": None,
     }
     identificador = secrets.token_hex(8)
     with _tranca:
@@ -197,6 +203,7 @@ def mover_jogo(identificador, direcao):
             for c in sessao["equipe"]:
                 c.curar_total()
             curou = True
+            sessao["ultimo_centro"] = (linha, coluna)
         return {
             "valido": mov.valido,
             "motivo": mov.motivo,
@@ -251,11 +258,13 @@ def batalha_nova(identificador, tipo, previsao_n=None):
         extra = {}
         if tipo == "selvagem":
             rng_enc = random.Random(f"{mapa.seed}-selvagem-{sessao['n_batalhas']}")
-            c, percentil, nivel = niveis.montar_selvagem(reg, rng_enc)
+            c, percentil, nivel = niveis.montar_selvagem(
+                reg, rng_enc, t=niveis.t_da_celula(mapa, *posicao))
             oponentes = [c]
             extra = {"percentil": percentil, "nivel": nivel}
         elif tipo == "treinador":
-            nome, oponentes, percentil, nivel = niveis.montar_treinador(reg, mapa.seed, posicao)
+            nome, oponentes, percentil, nivel = niveis.montar_treinador(
+                reg, mapa.seed, posicao, t=niveis.t_da_celula(mapa, *posicao))
             extra = {"nome": nome, "percentil": percentil, "nivel": nivel}
         else:
             oponentes = niveis.montar_time_lider(reg.lider)
@@ -282,6 +291,27 @@ def estado_batalha(batalha_id):
     return {"batalha_id": batalha_id, "estado": registro["batalha"].resumo()}
 
 
+def _aplicar_derrota(sessao, registro):
+    """Derrota nao encerra o jogo: volta ao ultimo Centro (ou a origem), com o
+    time curado, e o dinheiro cai pela metade. O encontro que venceu o jogador
+    fica intacto no mapa (o selvagem, o treinador e o lider continuam la)."""
+    mapa, player = sessao["mapa"], sessao["player"]
+    centro = sessao["ultimo_centro"]
+    destino = centro if centro is not None else (0, 0)
+    perdido = player.money // 2
+    player.money -= perdido
+    for c in sessao["equipe"]:
+        c.curar_total()
+    mapa.row_pos, mapa.col_pos = destino
+    sessao["derrotas"] += 1
+    sessao["ultima_derrota"] = {
+        "n": sessao["derrotas"], "para": list(destino),
+        "local": "centro" if centro is not None else "origem",
+        "dinheiro_perdido": perdido, "dinheiro": player.money,
+        "adversario": registro["batalha"].tipo,
+    }
+
+
 def _encerrar(registro):
     """Aplica no jogo o que a batalha decidiu. Roda uma vez, quando ela chega ao fim."""
     batalha, sessao = registro["batalha"], registro["sessao"]
@@ -297,7 +327,7 @@ def _encerrar(registro):
     if resultado == "vitoria" and batalha.tipo == "lider":
         sessao["lideres_derrotados"].add(registro["regiao"])
     if resultado == "derrota":
-        sessao["situacao"], sessao["motivo"] = "derrota", "time inteiro desmaiou"
+        _aplicar_derrota(sessao, registro)
     elif batalha.tipo == "lider" and resultado == "vitoria":
         total = {r.indice for r in mapa.regioes if r.lider}
         if total and sessao["lideres_derrotados"] >= total:

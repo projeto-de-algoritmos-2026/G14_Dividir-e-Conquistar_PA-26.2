@@ -12,7 +12,7 @@ Motor sem HTTP: `batalha/` (`motor.py`, `dano.py`, `tipos.py`, `cpu.py`, `niveis
 
 | Metodo | Rota | O que faz |
 |---|---|---|
-| GET | `/api/t3/jogo/novo?size=16&seed=42&nivel_inicial=35` | Nova partida com ginasios ligados. |
+| GET | `/api/t3/jogo/novo?size=16&seed=42&nivel_inicial=8` | Nova partida com ginasios ligados. |
 | GET | `/api/t3/jogo/estado?sessao=ID` | Posicao, encontro pendente, resumo do jogo. |
 | GET | `/api/t3/jogo/mover?sessao=ID&direcao=W/A/S/D` | Anda uma casa. Esbarrou em selvagem, treinador ou ginasio: devolve `encontro`, **nao luta**. |
 | POST | `/api/t3/batalha/nova` | Abre a batalha do encontro pendente. Devolve estado inicial e previsao. |
@@ -39,10 +39,10 @@ nela). Nenhuma outra celula muda de forma.
   "pisavel_sem_surf": true,
   "pisavel_com_surf": true,
   "ginasio": {
-    "lider": "Lider2",
-    "regiao": 1,
-    "percentil": 0.6333333333333333,
-    "nivel_time": 62
+    "lider": "Lider1",
+    "regiao": 0,
+    "percentil": 0.5,
+    "nivel_time": 13
   }
 }
 ```
@@ -55,23 +55,24 @@ deixa passar (`ginasio_ja_vencido: true`, sem encontro).
 
 ```json
 {
-  "sessao": "c202f0419b392a20",
+  "sessao": "2dc79e4ea739e271",
   "size": 16,
   "seed": 1,
   "posicao": [
     0,
     0
   ],
+  "celulas": "... 16 linhas x 16 colunas, cada celula como o exemplo acima ...",
   "ginasios": [
     {
       "posicao": [
-        2,
-        12
+        4,
+        3
       ],
-      "lider": "Lider2",
-      "regiao": 1,
-      "percentil": 0.6333333333333333,
-      "nivel_time": 62
+      "lider": "Lider1",
+      "regiao": 0,
+      "percentil": 0.5,
+      "nivel_time": 13
     },
     "..."
   ],
@@ -84,12 +85,12 @@ deixa passar (`ginasio_ja_vencido: true`, sem encontro).
     "time": [
       {
         "indice": 0,
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
+        "nome": "Squirtuga-inicial",
+        "especie": "Squirtuga",
         "tipo": "Water",
-        "nivel": 35,
-        "hp": 75,
-        "hp_max": 75,
+        "nivel": 8,
+        "hp": 25,
+        "hp_max": 25,
         "vivo": true
       }
     ],
@@ -98,20 +99,21 @@ deixa passar (`ginasio_ja_vencido: true`, sem encontro).
       "total": 4,
       "regioes_derrotadas": []
     },
-    "em_batalha": null
-  },
-  "celulas": "... 16 linhas x 16 colunas, cada celula como o exemplo abaixo ..."
+    "em_batalha": null,
+    "derrotas": 0,
+    "ultima_derrota": null
+  }
 }
 ```
 
-`nivel_inicial` (1 a 100, padrao 35) e o nivel do Pokemon inicial. O time comeca com
+`nivel_inicial` (1 a 100, padrao 8) e o nivel do Pokemon inicial. O time comeca com
 1 Pokemon, 5 pokebolas, 5 pocoes, 10000 de dinheiro. Pisar num Centro cura o time
 inteiro (`curou: true`).
 
 ## `GET /api/t3/jogo/mover`
 
 Resposta quando o passo termina num selvagem (a celula continua `pokemon` no mapa; ela
-so vira `visitado` quando a batalha acaba sem derrota):
+so vira `visitado` quando a batalha termina em vitoria, fuga ou captura):
 
 ```json
 {
@@ -160,10 +162,10 @@ Corpo: `{"sessao": "ID", "tipo": "selvagem|treinador|lider", "previsao_n": 1000}
 
 ```json
 {
-  "batalha_id": "d0a3570db245dd11",
+  "batalha_id": "196f31303741ffca",
   "adversario": {
-    "percentil": 0.39617593199750467,
-    "nivel": 40
+    "percentil": 0.10668901644421219,
+    "nivel": 5
   },
   "tipo": "selvagem",
   "estado": "aguardando_acao",
@@ -176,24 +178,25 @@ Corpo: `{"sessao": "ID", "tipo": "selvagem|treinador|lider", "previsao_n": 1000}
   ],
   "jogador": {
     "ativo": {
-      "nome": "Squirtle-inicial",
-      "especie": "Squirtle",
+      "nome": "Squirtuga-inicial",
+      "especie": "Squirtuga",
       "tipo": "Water",
-      "nivel": 35,
-      "hp": 75,
-      "hp_max": 75,
+      "nivel": 8,
+      "hp": 25,
+      "hp_max": 25,
       "vivo": true,
-      "xp": 42875,
-      "xp_proximo_nivel": 46656
+      "xp": 512,
+      "xp_nivel_atual": 512,
+      "xp_proximo_nivel": 729
     },
     "time": [
       {
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
+        "nome": "Squirtuga-inicial",
+        "especie": "Squirtuga",
         "tipo": "Water",
-        "nivel": 35,
-        "hp": 75,
-        "hp_max": 75,
+        "nivel": 8,
+        "hp": 25,
+        "hp_max": 25,
         "vivo": true,
         "indice": 0,
         "ativo": true
@@ -226,12 +229,12 @@ Corpo: `{"sessao": "ID", "tipo": "selvagem|treinador|lider", "previsao_n": 1000}
   },
   "oponente": {
     "ativo": {
-      "nome": "Geodude-selvagem",
-      "especie": "Geodude",
+      "nome": "Geobruto-selvagem",
+      "especie": "Geobruto",
       "tipo": "Rock",
-      "nivel": 40,
-      "hp": 82,
-      "hp_max": 82,
+      "nivel": 5,
+      "hp": 19,
+      "hp_max": 19,
       "vivo": true
     },
     "restantes": 1,
@@ -239,23 +242,23 @@ Corpo: `{"sessao": "ID", "tipo": "selvagem|treinador|lider", "previsao_n": 1000}
   },
   "previsao": {
     "n": 1000,
-    "vitoria": 0.872,
+    "vitoria": 1.0,
     "hp_restante": {
-      "p10": 0.0,
-      "p50": 0.52,
-      "p90": 0.5866666666666667
+      "p10": 0.76,
+      "p50": 1.0,
+      "p90": 1.0
     },
     "hp_restante_vitorias": {
-      "p10": 0.08,
-      "p50": 0.5333333333333333,
-      "p90": 0.5866666666666667
+      "p10": 0.76,
+      "p50": 1.0,
+      "p90": 1.0
     },
     "turnos": {
-      "p10": 2,
-      "p50": 2,
-      "p90": 3
+      "p10": 1,
+      "p50": 1,
+      "p90": 2
     },
-    "tempo_ms": 35.8
+    "tempo_ms": 23.8
   }
 }
 ```
@@ -278,72 +281,79 @@ Corpo: `{"batalha_id": "ID", "acao": "lutar|mochila|pokemon|fugir", ...}`
 | `pokemon` | `alvo`: indice no time | Troca. Gasta o turno; apos desmaio e a troca forcada e nao gasta. |
 | `fugir` | nenhum | So em selvagem. |
 
-Resposta a `lutar` (golpe 0, Hydropump super efetivo contra um Geodude; depois a CPU
+Resposta a `lutar` (golpe 0, Hydropump super efetivo contra um Geobruto; depois a CPU
 revida):
 
 ```json
 {
-  "batalha_id": "d0a3570db245dd11",
+  "batalha_id": "196f31303741ffca",
   "eventos": [
     {
       "tipo": "golpe",
       "quem": "jogador",
-      "pokemon": "Squirtle-inicial",
+      "pokemon": "Squirtuga-inicial",
       "golpe": "Hydropump",
+      "tipo_golpe": "Water",
       "efetividade": 2.0,
       "critico": false,
-      "dano": 46,
-      "hp_antes": 82,
-      "hp_depois": 36,
-      "hp_max": 82,
-      "alvo": "Geodude-selvagem",
+      "dano": 19,
+      "hp_antes": 19,
+      "hp_depois": 0,
+      "hp_max": 19,
+      "alvo": "Geobruto-selvagem",
       "pp_restante": 4
     },
     {
-      "tipo": "golpe",
+      "tipo": "desmaio",
       "quem": "oponente",
-      "pokemon": "Geodude-selvagem",
-      "golpe": "Rock-throw",
-      "efetividade": 1.0,
-      "critico": false,
-      "dano": 35,
-      "hp_antes": 75,
-      "hp_depois": 40,
-      "hp_max": 75,
-      "alvo": "Squirtle-inicial",
-      "pp_restante": 14
+      "pokemon": "Geobruto-selvagem"
+    },
+    {
+      "tipo": "xp",
+      "pokemon": "Squirtuga-inicial",
+      "ganho": 45,
+      "xp_total": 557,
+      "nivel_antes": 8,
+      "nivel_depois": 8,
+      "hp": 25,
+      "hp_max": 25,
+      "xp_nivel_antes": 512,
+      "xp_proximo_nivel_antes": 729,
+      "xp_nivel_atual": 512,
+      "xp_proximo_nivel": 729
+    },
+    {
+      "tipo": "fim",
+      "resultado": "vitoria"
     }
   ],
   "estado": {
     "tipo": "selvagem",
-    "estado": "aguardando_acao",
+    "estado": "fim",
     "turno": 1,
-    "resultado": null,
-    "acoes_validas": [
-      "lutar",
-      "mochila",
-      "fugir"
-    ],
+    "resultado": "vitoria",
+    "acoes_validas": [],
     "jogador": {
       "ativo": {
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
+        "nome": "Squirtuga-inicial",
+        "especie": "Squirtuga",
         "tipo": "Water",
-        "nivel": 35,
-        "hp": 40,
-        "hp_max": 75,
+        "nivel": 8,
+        "hp": 25,
+        "hp_max": 25,
         "vivo": true,
-        "xp": 42875,
-        "xp_proximo_nivel": 46656
+        "xp": 557,
+        "xp_nivel_atual": 512,
+        "xp_proximo_nivel": 729
       },
       "time": [
         {
-          "nome": "Squirtle-inicial",
-          "especie": "Squirtle",
+          "nome": "Squirtuga-inicial",
+          "especie": "Squirtuga",
           "tipo": "Water",
-          "nivel": 35,
-          "hp": 40,
-          "hp_max": 75,
+          "nivel": 8,
+          "hp": 25,
+          "hp_max": 25,
           "vivo": true,
           "indice": 0,
           "ativo": true
@@ -376,15 +386,15 @@ revida):
     },
     "oponente": {
       "ativo": {
-        "nome": "Geodude-selvagem",
-        "especie": "Geodude",
+        "nome": "Geobruto-selvagem",
+        "especie": "Geobruto",
         "tipo": "Rock",
-        "nivel": 40,
-        "hp": 36,
-        "hp_max": 82,
-        "vivo": true
+        "nivel": 5,
+        "hp": 0,
+        "hp_max": 19,
+        "vivo": false
       },
-      "restantes": 1,
+      "restantes": 0,
       "tamanho_time": 1
     }
   },
@@ -396,29 +406,30 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
 
 ```json
 {
-  "batalha_id": "d0a3570db245dd11",
+  "batalha_id": "015d28e86d5c8e89",
   "eventos": [
     {
       "tipo": "pocao",
       "quem": "jogador",
-      "pokemon": "Squirtle-inicial",
-      "cura": 35,
-      "hp_antes": 40,
-      "hp_depois": 75,
-      "hp_max": 75
+      "pokemon": "Squirtuga-inicial",
+      "cura": 6,
+      "hp_antes": 19,
+      "hp_depois": 25,
+      "hp_max": 25
     },
     {
       "tipo": "golpe",
       "quem": "oponente",
-      "pokemon": "Geodude-selvagem",
+      "pokemon": "Geobruto-selvagem",
       "golpe": "head-butt",
+      "tipo_golpe": "Normal",
       "efetividade": 1.0,
       "critico": false,
-      "dano": 32,
-      "hp_antes": 75,
-      "hp_depois": 43,
-      "hp_max": 75,
-      "alvo": "Squirtle-inicial",
+      "dano": 5,
+      "hp_antes": 25,
+      "hp_depois": 20,
+      "hp_max": 25,
+      "alvo": "Squirtuga-inicial",
       "pp_restante": 14
     }
   ],
@@ -434,24 +445,25 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
     ],
     "jogador": {
       "ativo": {
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
+        "nome": "Squirtuga-inicial",
+        "especie": "Squirtuga",
         "tipo": "Water",
-        "nivel": 35,
-        "hp": 43,
-        "hp_max": 75,
+        "nivel": 8,
+        "hp": 20,
+        "hp_max": 25,
         "vivo": true,
-        "xp": 42875,
-        "xp_proximo_nivel": 46656
+        "xp": 512,
+        "xp_nivel_atual": 512,
+        "xp_proximo_nivel": 729
       },
       "time": [
         {
-          "nome": "Squirtle-inicial",
-          "especie": "Squirtle",
+          "nome": "Squirtuga-inicial",
+          "especie": "Squirtuga",
           "tipo": "Water",
-          "nivel": 35,
-          "hp": 43,
-          "hp_max": 75,
+          "nivel": 8,
+          "hp": 20,
+          "hp_max": 25,
           "vivo": true,
           "indice": 0,
           "ativo": true
@@ -464,7 +476,7 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
           "tipo": "Water",
           "poder": 110,
           "precisao": 80,
-          "pp": 4,
+          "pp": 5,
           "pp_max": 5
         },
         {
@@ -473,7 +485,7 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
           "tipo": "Normal",
           "poder": 60,
           "precisao": 100,
-          "pp": 25,
+          "pp": 24,
           "pp_max": 25
         }
       ],
@@ -484,12 +496,12 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
     },
     "oponente": {
       "ativo": {
-        "nome": "Geodude-selvagem",
-        "especie": "Geodude",
+        "nome": "Geobruto-selvagem",
+        "especie": "Geobruto",
         "tipo": "Rock",
-        "nivel": 40,
-        "hp": 36,
-        "hp_max": 82,
+        "nivel": 5,
+        "hp": 17,
+        "hp_max": 19,
         "vivo": true
       },
       "restantes": 1,
@@ -500,130 +512,55 @@ Resposta a `mochila`/`pocao` (cura e depois leva um golpe):
 }
 ```
 
-Resposta a `mochila`/`pokebola` (captura que falha, a CPU ataca e derruba o Pokemon;
-o time acabou, a batalha termina em derrota):
+Resposta quando o time acaba (o mesmo mapa, um treinador a 3 casas da origem; so os 3
+ultimos eventos e o resumo do jogo, que ja traz a derrota aplicada):
 
 ```json
 {
-  "batalha_id": "d0a3570db245dd11",
+  "batalha_id": "1c9695258890d409",
   "eventos": [
-    {
-      "tipo": "captura",
-      "sucesso": false,
-      "balancadas": 1,
-      "pokemon": "Geodude-selvagem",
-      "chance": 0.5146
-    },
     {
       "tipo": "golpe",
       "quem": "oponente",
-      "pokemon": "Geodude-selvagem",
+      "pokemon": "Geobruto-Jenny-2",
       "golpe": "Rock-throw",
+      "tipo_golpe": "Rock",
       "efetividade": 1.0,
       "critico": false,
-      "dano": 13,
-      "hp_antes": 13,
+      "dano": 1,
+      "hp_antes": 1,
       "hp_depois": 0,
-      "hp_max": 75,
-      "alvo": "Squirtle-inicial",
+      "hp_max": 25,
+      "alvo": "Squirtuga-inicial",
       "pp_restante": 13
     },
     {
       "tipo": "desmaio",
       "quem": "jogador",
-      "pokemon": "Squirtle-inicial"
+      "pokemon": "Squirtuga-inicial"
     },
     {
       "tipo": "fim",
       "resultado": "derrota"
     }
   ],
-  "estado": {
-    "tipo": "selvagem",
-    "estado": "fim",
-    "turno": 4,
-    "resultado": "derrota",
-    "acoes_validas": [],
-    "jogador": {
-      "ativo": {
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
-        "tipo": "Water",
-        "nivel": 35,
-        "hp": 0,
-        "hp_max": 75,
-        "vivo": false,
-        "xp": 42875,
-        "xp_proximo_nivel": 46656
-      },
-      "time": [
-        {
-          "nome": "Squirtle-inicial",
-          "especie": "Squirtle",
-          "tipo": "Water",
-          "nivel": 35,
-          "hp": 0,
-          "hp_max": 75,
-          "vivo": false,
-          "indice": 0,
-          "ativo": true
-        }
-      ],
-      "golpes": [
-        {
-          "indice": 0,
-          "nome": "Hydropump",
-          "tipo": "Water",
-          "poder": 110,
-          "precisao": 80,
-          "pp": 4,
-          "pp_max": 5
-        },
-        {
-          "indice": 1,
-          "nome": "Bite",
-          "tipo": "Normal",
-          "poder": 60,
-          "precisao": 100,
-          "pp": 25,
-          "pp_max": 25
-        }
-      ],
-      "mochila": {
-        "pocao": 4,
-        "pokebola": 3
-      }
-    },
-    "oponente": {
-      "ativo": {
-        "nome": "Geodude-selvagem",
-        "especie": "Geodude",
-        "tipo": "Rock",
-        "nivel": 40,
-        "hp": 36,
-        "hp_max": 82,
-        "vivo": true
-      },
-      "restantes": 1,
-      "tamanho_time": 1
-    }
-  },
+  "estado": "... estado final, time curado ...",
   "jogo": {
-    "situacao": "derrota",
-    "motivo": "time inteiro desmaiou",
-    "dinheiro": 10000,
-    "pokebolas": 3,
-    "pocoes": 4,
+    "situacao": "jogando",
+    "motivo": "",
+    "dinheiro": 5000,
+    "pokebolas": 5,
+    "pocoes": 5,
     "time": [
       {
         "indice": 0,
-        "nome": "Squirtle-inicial",
-        "especie": "Squirtle",
+        "nome": "Squirtuga-inicial",
+        "especie": "Squirtuga",
         "tipo": "Water",
-        "nivel": 35,
-        "hp": 0,
-        "hp_max": 75,
-        "vivo": false
+        "nivel": 8,
+        "hp": 25,
+        "hp_max": 25,
+        "vivo": true
       }
     ],
     "lideres": {
@@ -631,7 +568,19 @@ o time acabou, a batalha termina em derrota):
       "total": 4,
       "regioes_derrotadas": []
     },
-    "em_batalha": null
+    "em_batalha": null,
+    "derrotas": 1,
+    "ultima_derrota": {
+      "n": 1,
+      "para": [
+        0,
+        0
+      ],
+      "local": "origem",
+      "dinheiro_perdido": 5000,
+      "dinheiro": 5000,
+      "adversario": "treinador"
+    }
   }
 }
 ```
@@ -652,13 +601,13 @@ Depois do `fim`, qualquer acao responde 400:
 
 | tipo | campos alem de `tipo` |
 |---|---|
-| `golpe` | `quem`, `pokemon`, `golpe`, `alvo`, `efetividade` (2.0, 1.0, 0.5), `critico`, `dano`, `hp_antes`, `hp_depois`, `hp_max`, `pp_restante` (null no Esforco) |
-| `errou` | `quem`, `pokemon`, `golpe` |
+| `golpe` | `quem`, `pokemon`, `golpe`, `tipo_golpe`, `alvo`, `efetividade` (2.0, 1.0, 0.5), `critico`, `dano`, `hp_antes`, `hp_depois`, `hp_max`, `pp_restante` (null no Esforco) |
+| `errou` | `quem`, `pokemon`, `golpe`, `tipo_golpe` |
 | `recuo` | `quem`, `pokemon`, `dano`, `hp_antes`, `hp_depois`, `hp_max` (so do Esforco) |
 | `pocao` | `quem`, `pokemon`, `cura`, `hp_antes`, `hp_depois`, `hp_max` |
 | `troca` | `quem`, `de`, `para`, `indice`, `forcada` (a CPU manda o proximo com `forcada: true`) |
 | `desmaio` | `quem`, `pokemon` |
-| `xp` | `pokemon`, `ganho`, `xp_total`, `nivel_antes`, `nivel_depois`, `hp`, `hp_max` |
+| `xp` | `pokemon`, `ganho`, `xp_total`, `nivel_antes`, `nivel_depois`, `hp`, `hp_max`, `xp_nivel_antes`, `xp_proximo_nivel_antes`, `xp_nivel_atual`, `xp_proximo_nivel` |
 | `dinheiro` | `ganho` (treinador e lider) |
 | `captura` | `sucesso`, `balancadas` (0 a 3), `pokemon`, `chance` |
 | `fuga` | `sucesso`, `chance` |
@@ -667,13 +616,145 @@ Depois do `fim`, qualquer acao responde 400:
 ### Estado resumido
 
 `estado.estado` e `aguardando_acao`, `troca_forcada` (so a acao `pokemon` e valida) ou
-`fim`. `estado.resultado` e `null` ate o fim. `estado.jogador` traz `ativo` (com `xp` e
-`xp_proximo_nivel`), `time`, `golpes` (com `pp`) e `mochila`; `estado.oponente` traz
+`fim`. `estado.resultado` e `null` ate o fim. `estado.jogador` traz `ativo` (com `xp`,
+`xp_nivel_atual` e `xp_proximo_nivel`), `time`, `golpes` (com `pp`) e `mochila`; `estado.oponente` traz
 `ativo`, `restantes` e `tamanho_time`. `jogo` e o resumo da partida: `situacao`
-(`jogando`, `derrota`, `vitoria`), dinheiro, time e `lideres.derrotados/total`.
+(`jogando` ou `vitoria`), dinheiro, time, `lideres.derrotados/total`, `derrotas` (quantas vezes
+o time caiu) e `ultima_derrota` (`null` ate a primeira).
 
-Fim da partida: `derrota` quando o time inteiro desmaia; `vitoria` quando todos os
-lideres do mapa caem.
+Fim da partida: so `vitoria`, quando todos os lideres do mapa caem. Derrota nao encerra
+o jogo (ver "Derrota" abaixo).
+
+## Etapa 4: progressao, derrota sem fim de jogo e contrato aditivo
+
+### Progressao por distancia
+
+O mapa continua dividido em regioes (blocos de 8 x 8). A populacao de niveis de cada
+regiao agora cresce com a distancia do bloco ate a origem (0, 0): `t` = distancia
+euclidiana do canto do bloco mais proximo da origem, dividida pela maior entre os blocos.
+Piso e teto interpolam linearmente de (5, 30) em `t = 0` ate (50, 100) em `t = 1`
+(a meio caminho, cerca de 27 a 65). A populacao e assimetrica: `nivel = piso + (teto - piso) *
+u**1.6`, `u` uniforme, entao ha mais fracos que fortes. Os lideres seguem a mediana
+(primeiro) ate o percentil 0.9 (ultimo), e agora a ordem dos percentis e dos nomes
+(`Lider1`, `Lider2`...) e a da distancia da regiao, nao a da linha do bloco. O nivel
+sempre sai de `selecionar` (mediana das medianas). O jogador nasce no nivel 8.
+
+### Derrota nao encerra o jogo
+
+Quando o time inteiro desmaia a batalha termina em `derrota` e a API ja aplica o que
+acontece depois: o jogador volta ao **ultimo Centro pisado** (ou a origem, se nao pisou em
+nenhum), o time inteiro e curado (HP e PP) e o dinheiro cai pela metade. O adversario que
+venceu continua no mapa. `situacao` segue `jogando`. O resumo do jogo traz:
+
+```json
+"derrotas": 1,
+"ultima_derrota": {"n": 1, "para": [0, 0], "local": "origem", "dinheiro_perdido": 5000, "dinheiro": 5000, "adversario": "treinador"}
+```
+
+`para` e a celula onde o jogador reaparece, `local` e `centro` ou `origem`. A posicao ja vem
+atualizada em `jogo/estado`.
+
+### Subida de nivel e barra de XP
+
+O evento `xp` e o estado do Pokemon ativo agora trazem os limites da barra, entao o front
+nao precisa conhecer a curva (`L**3`) nem o nivel maximo: fracao da barra =
+`(xp - xp_nivel_atual) / (xp_proximo_nivel - xp_nivel_atual)`. `xp_proximo_nivel` e `null`
+no nivel 100. No evento, `xp_nivel_antes`/`xp_proximo_nivel_antes` sao os limites do nivel
+de ANTES (de onde a barra parte) e `xp_nivel_atual`/`xp_proximo_nivel` os do nivel de
+DEPOIS (onde ela termina; se subiu varios niveis, a barra enche e recomeca a cada um).
+
+Subida real, sem tocar em XP: mapa `size=16&seed=1`, o inicial (nivel 8) vence os selvagens
+de (1, 2) e (2, 1) e depois o de (4, 2):
+
+```json
+{
+  "eventos": [
+    {
+      "tipo": "xp",
+      "pokemon": "Squirtuga-inicial",
+      "ganho": 54,
+      "xp_total": 746,
+      "nivel_antes": 8,
+      "nivel_depois": 9,
+      "hp": 17,
+      "hp_max": 26,
+      "xp_nivel_antes": 512,
+      "xp_proximo_nivel_antes": 729,
+      "xp_nivel_atual": 729,
+      "xp_proximo_nivel": 1000
+    }
+  ],
+  "estado.jogador.ativo": {
+    "nome": "Squirtuga-inicial",
+    "especie": "Squirtuga",
+    "tipo": "Water",
+    "nivel": 9,
+    "hp": 17,
+    "hp_max": 26,
+    "vivo": true,
+    "xp": 746,
+    "xp_nivel_atual": 729,
+    "xp_proximo_nivel": 1000
+  }
+}
+```
+
+### Troca de Pokemon
+
+Para ter dois Pokemon e preciso capturar. Na `size=12&seed=1` o inicial e um Squirtuga
+nivel 8 e o selvagem de (3, 3) (Squirtuga nivel 7) cai na pokebola depois de baixar o HP dele
+abaixo de 35%. Nos testes automatizados a captura roda em `size=12&seed=2`, selvagem posto
+em (1, 3): o inicial e um Sonolax e o capturado um Miaupsi nivel 5
+(`tests/test_api_batalha.py::capturar_segundo`).
+
+Troca voluntaria (`acao: "pokemon"`, `alvo: 1`) gasta o turno: o evento `troca` vem com
+`forcada: false` e a CPU ataca em seguida, no Pokemon que acabou de entrar:
+
+```json
+[
+  {
+    "tipo": "troca",
+    "quem": "jogador",
+    "de": "Squirtuga-inicial",
+    "para": "Squirtuga-selvagem",
+    "indice": 1,
+    "forcada": false
+  },
+  {
+    "tipo": "golpe",
+    "quem": "oponente",
+    "pokemon": "Chamandrel-selvagem",
+    "golpe": "Bite",
+    "tipo_golpe": "Normal",
+    "efetividade": 1.0,
+    "critico": false,
+    "dano": 6,
+    "hp_antes": 23,
+    "hp_depois": 17,
+    "hp_max": 23,
+    "alvo": "Squirtuga-selvagem",
+    "pp_restante": 24
+  }
+]
+```
+
+Troca forcada: quando o Pokemon em campo desmaia e ha outro vivo, o estado vira
+`troca_forcada`, `acoes_validas` fica so `["pokemon"]` e qualquer outra acao responde 400.
+A troca escolhida vem com `forcada: true` e **nao gasta turno** (o `turno` do estado nao
+muda; a CPU nao ataca):
+
+```json
+[
+  {
+    "tipo": "troca",
+    "quem": "jogador",
+    "de": "Squirtuga-inicial",
+    "para": "Squirtuga-selvagem",
+    "indice": 1,
+    "forcada": true
+  }
+]
+```
 
 ## Regras (o que o motor faz)
 
@@ -730,10 +811,12 @@ Dinheiro: treinador `100 * nivel`, lider `300 * nivel` (maior nivel do time).
 
 Sempre `selecionar(populacao_da_regiao, k)` com `k = indice_do_percentil(n, p)`:
 
-- selvagem: `p` sorteado em [0.20, 0.50] a cada encontro;
-- treinador: `p` fixo por treinador em [0.40, 0.70], derivado de (seed, posicao);
-  time de 2 Pokemon;
-- lider: o percentil do ginasio (fase 1), time de 3.
+- selvagem: `p` sorteado a cada encontro numa faixa que sobe com a distancia da celula
+  ate a origem, de [0.00, 0.12] (colado na origem) a [0.15, 0.45] (canto oposto);
+- treinador: `p` fixo por treinador, derivado de (seed, posicao), na faixa de
+  [0.00, 0.10] (origem) a [0.30, 0.60] (canto oposto); time de 2 Pokemon (1 so quando a
+  celula esta a menos de 25% da distancia maxima da origem);
+- lider: o percentil do ginasio (de 0.5 a 0.9, subindo com a distancia da regiao), time de 3.
 
 ### CPU
 

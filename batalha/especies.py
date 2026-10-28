@@ -32,13 +32,13 @@ ESFORCO = ("Esforco", NORMAL, 50, 100)
 
 # especie -> (HP, Ataque, Defesa, Velocidade) base
 BASE = {
-    "Charmander": (39, 52, 43, 65),
-    "Charzard": (78, 84, 78, 100),
-    "Squirtle": (44, 48, 65, 43),
-    "Geodude": (40, 80, 100, 20),
-    "Onyx": (35, 45, 160, 70),
-    "Snorlax": (160, 110, 65, 30),
-    "Mew": (100, 100, 100, 100),
+    "Chamandrel": (39, 52, 43, 65),
+    "Charzardo": (78, 84, 78, 100),
+    "Squirtuga": (44, 48, 65, 43),
+    "Geobruto": (40, 80, 100, 20),
+    "Onixo": (35, 45, 160, 70),
+    "Sonolax": (160, 110, 65, 30),
+    "Miaupsi": (100, 100, 100, 100),
 }
 BASE_PADRAO = (50, 50, 50, 50)
 

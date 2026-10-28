@@ -25,7 +25,7 @@ def mapa():
 @pytest.fixture
 def andarilho():
     return models.Player("Lucas", "Male", "Fun",
-                         [models.Pokemon("Faisca", "Male", "Pikachu", "Electric",
+                         [models.Pokemon("Faisca", "Male", "Pikachoque", "Electric",
                                          {"Shock": 40, "Tail Whip": 25})],
                          {"pokeball": 0, "potion": 3}, 0)
 
@@ -140,7 +140,7 @@ def test_mover_nao_depende_de_variavel_global(mapa, andarilho):
     import importlib
     assert importlib.util.find_spec("state") is None
     outro = models.Player("Outro", "Male", "Fun",
-                          [models.Pokemon("B", "Male", "Onyx", "Rock", {"S": 1, "T": 2})],
+                          [models.Pokemon("B", "Male", "Onixo", "Rock", {"S": 1, "T": 2})],
                           {"pokeball": 0}, 0)
     mapa.celula(0, 1).occupied_with = grid.POKEBOLA
     game.mover(mapa, outro, "D")

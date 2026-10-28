@@ -67,7 +67,7 @@ def test_executar_caminho_para_quando_o_time_acaba(jogador):
     assert mapa.posicao == (0, 1)
 
 
-def test_executar_caminho_para_quando_o_time_enche(jogador, pikachu):
+def test_executar_caminho_para_quando_o_time_enche(jogador, faisca):
     """Vencer no meio de um caminho encerra a partida ali.
 
     A checagem so existia entre planos, e um caminho do DFS tem dezenas de
@@ -83,7 +83,7 @@ def test_executar_caminho_para_quando_o_time_enche(jogador, pikachu):
 
     def completa_o_time(*args, **kwargs):
         while len(jogador.pokemon_list) < game.POKEMON_PARA_VENCER:
-            jogador.pokemon_list.append(pikachu)
+            jogador.pokemon_list.append(faisca)
 
     mapa.celula(0, 1).occupied_with = grid.POKEMON
     with mock.patch.object(game, "battle", side_effect=completa_o_time):

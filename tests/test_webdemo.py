@@ -261,7 +261,7 @@ def test_desmaio_por_falta_de_energia_e_derrota_e_nao_vitoria():
     from models import Player, Pokemon
 
     jogador = Player("Lucas", "Male", "Fun",
-                     [Pokemon("Faisca", "Male", "Pikachu", "Electric", {"Shock": 40})],
+                     [Pokemon("Faisca", "Male", "Pikachoque", "Electric", {"Shock": 40})],
                      {"pokeball": 0}, 0, energia=5, energia_max=5)
     jogador.desmaiado = True
 

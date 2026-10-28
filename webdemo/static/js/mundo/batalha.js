@@ -11,8 +11,7 @@ import {
   chaveCriatura, garantirCriatura, garantirFundo, garantirPlataforma, gerarEfeitos,
 } from "./batalha_arte.js";
 import { UiBatalha, nomeTipo } from "./batalha_ui.js";
-import { ESC } from "./constantes.js";
-import { CEL_H, FOLHAS_CPU, PES_Y } from "./personagens.js";
+import { CEL_H, ESC_BATALHA, FOLHAS_CPU, PES_Y, garantirFolhaBatalha } from "./personagens.js";
 
 // Palco logico: 480 x 270 unidades. Plataformas (centro) de cada lado.
 const PLAT_O = { x: 352, y: 134, k: 0.8 };
@@ -21,16 +20,7 @@ const ESCALA_O = 1.0; // escala da criatura do adversario (de frente, mais longe
 const ESCALA_J = 1.5; // e da sua (de costas, mais perto)
 const CELULA = 24;
 
-// Tipo do golpe so pra escolher a animacao. Os golpes do jogador chegam com tipo
-// (estado.jogador.golpes); os do adversario nao, entao cai neste catalogo
-// (docs/api-batalha-t3.md) e, fora dele, no tipo de quem atacou.
-const TIPO_DO_GOLPE = {
-  Flamethrower: "Fire", "Fire-blast": "Fire", Hydropump: "Water", "Rock-throw": "Rock",
-  "Mind-beam": "Psychic", "Psychic-slam": "Psychic",
-};
-
 const nomeBase = (nome) => String(nome || "").split("-")[0];
-const cubo = (n) => n * n * n;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 function paletaDe(texto) {
@@ -271,11 +261,11 @@ export class CenaBatalha extends Phaser.Scene {
 
   criarTreinador(lado, folha, escala, frame) {
     const p = lado === "o" ? PLAT_O : PLAT_J;
-    const img = this.add.image(p.x, p.y - 2, "folha_" + folha, frame)
-      .setOrigin(0.5, PES_Y / CEL_H).setScale(escala / ESC).setDepth(lado === "o" ? 5 : 6);
+    const img = this.add.image(p.x, p.y - 2, garantirFolhaBatalha(this, folha), frame)
+      .setOrigin(0.5, PES_Y / CEL_H).setScale(escala / ESC_BATALHA).setDepth(lado === "o" ? 5 : 6);
     const sombra = this.add.image(p.x, p.y - 1, "bt_sombra").setDisplaySize(46, 14).setDepth(2);
     const t = { img, sombra, x: p.x, y: p.y - 2, escala };
-    this.tweens.add({ targets: img, scaleY: (escala / ESC) * 1.03, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    this.tweens.add({ targets: img, scaleY: (escala / ESC_BATALHA) * 1.03, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
     return t;
   }
 
@@ -301,7 +291,7 @@ export class CenaBatalha extends Phaser.Scene {
     for (const r of this.recs) {
       if (!r.img.active) continue;
       const t = tempo / 1000 + r.fase;
-      const mew = r.especie === "Mew";
+      const mew = r.especie === "Miaupsi";
       const s = Math.sin(t * (mew ? 1.8 : 2.3));
       const flut = mew ? -7 - 3.4 * s : 0;
       r.img.setPosition(r.x + r.off.x, r.y + r.off.y + flut);
@@ -414,18 +404,19 @@ export class CenaBatalha extends Phaser.Scene {
     const sai = Promise.all([this.tw(this.tJ.img, { x: -90, alpha: 0 }, 460, "Cubic.in"), this.tw(this.tJ.sombra, { x: -90, alpha: 0 }, 460, "Cubic.in")]);
     await this.esp(90);
     await Promise.all([sai, this.entrar(this.rJ, bolaJ)]);
-    this.xpAtual = { nivel: J.nivel, xp: J.xp };
     ui.info("j", this.infoDe("j", J));
-    ui.xp(this.fracXp(J.xp, J.nivel));
+    ui.xp(this.fracAtivo(J));
     await this.esp(250);
   }
 
-  fracXp(xp, nivel) {
-    // So pra desenhar a barra: curva documentada (XP total do nivel L = L ao cubo).
-    const base = cubo(nivel);
-    const prox = cubo(nivel + 1);
+  // Fracao da barra de XP. Os limites chegam da API (xp_nivel_atual e
+  // xp_proximo_nivel, null no nivel maximo): o front nao conhece a curva.
+  fracXp(xp, base, prox) {
+    if (prox == null) return 1;
     return clamp((xp - base) / (prox - base), 0, 1);
   }
+
+  fracAtivo(a) { return this.fracXp(a.xp, a.xp_nivel_atual, a.xp_proximo_nivel); }
 
   poeira(x, y, n = 5) {
     for (let i = 0; i < n; i++) {
@@ -507,8 +498,7 @@ export class CenaBatalha extends Phaser.Scene {
     const O = est.oponente.ativo;
     if (this.rJ && this.rJ.vivo) {
       this.ui.info("j", this.infoDe("j", J));
-      this.ui.xp(this.fracXp(J.xp, J.nivel));
-      this.xpAtual = { nivel: J.nivel, xp: J.xp };
+      this.ui.xp(this.fracAtivo(J));
     }
     if (this.rO && this.rO.vivo) this.ui.info("o", this.infoDe("o", O));
   }
@@ -576,7 +566,7 @@ export class CenaBatalha extends Phaser.Scene {
   async escolherItem() {
     const m = this.est.jogador.mochila || {};
     const r = await this.ui.escolher({
-      tipo: "lista", titulo: "Mochila", colunas: 1,
+      tipo: "lista", titulo: "Mochila", colunas: 2,
       itens: [
         { rotulo: "Pocao", sub: "cura HP", extra: this.chipQtd(m.pocao), ativo: (m.pocao || 0) > 0 },
         { rotulo: "Pokebola", sub: "captura", extra: this.chipQtd(m.pokebola), ativo: (m.pokebola || 0) > 0 },
@@ -606,17 +596,17 @@ export class CenaBatalha extends Phaser.Scene {
       const bloco = document.createElement("span");
       bloco.className = "bt-mini-nome";
       bloco.textContent = `${m.hp}/${m.hp_max}`;
-      bloco.style.cssText = "font:600 11px var(--mono);color:#93a4b8";
+      bloco.style.cssText = "font:600 calc(5.4*var(--u)) var(--mono);color:#93a4b8";
       const dir = document.createElement("div");
       dir.append(bloco, mini);
       dir.style.textAlign = "right";
       return {
-        rotulo: `${nomeBase(m.nome)} Nv ${m.nivel}`, sub: m.ativo ? "em campo" : m.vivo ? nomeTipo(m.tipo) : "desmaiado",
+        rotulo: `${nomeBase(m.nome)} Nv ${m.nivel}`, sub: !m.vivo ? "desmaiado" : m.ativo ? "em campo" : nomeTipo(m.tipo),
         extra: dir, ativo: m.vivo && !m.ativo,
       };
     });
     this.ui.textoFixo(forcada ? "Escolha o proximo Pokemon." : "");
-    const r = await this.ui.escolher({ tipo: "lista", titulo: "Pokemon", itens, colunas: 1, podeVoltar: !forcada });
+    const r = await this.ui.escolher({ tipo: "lista", titulo: "Pokemon", itens, colunas: 3, podeVoltar: !forcada });
     if (r.voltar) return null;
     return { acao: "pokemon", extra: { alvo: time[r.indice].indice } };
   }
@@ -628,12 +618,9 @@ export class CenaBatalha extends Phaser.Scene {
     return quem === "oponente" && this.tipo === "selvagem" ? `${b} selvagem` : b;
   }
 
+  // O tipo do golpe vem no evento (tipo_golpe); sem ele, o tipo de quem atacou.
   tipoGolpe(ev, atacante) {
-    const meu = (this.est.jogador.golpes || []).find((g) => g.nome === ev.golpe);
-    if (ev.quem === "jogador" && meu) return meu.tipo;
-    if (TIPO_DO_GOLPE[ev.golpe]) return TIPO_DO_GOLPE[ev.golpe];
-    if (["Claw", "Slap", "Bite", "head-butt", "Body-slam", "Esforco"].includes(ev.golpe)) return "Normal";
-    return atacante.tipo;
+    return ev.tipo_golpe || atacante.tipo;
   }
 
   async evento(ev) {
@@ -1065,7 +1052,7 @@ export class CenaBatalha extends Phaser.Scene {
       await this.entrar(this.rJ, { x: PLAT_J.x - 56, y: PLAT_J.y - 40 });
       this.ui.info("j", { nome: nomeBase(dados.nome), nivel: dados.nivel, tipo: dados.tipo, hp: dados.hp, hpMax: dados.hp_max });
       const at = this.estFinal.jogador.ativo;
-      if (at.nome === ev.para) { this.ui.xp(this.fracXp(at.xp, at.nivel)); this.xpAtual = { nivel: at.nivel, xp: at.xp }; }
+      if (at.nome === ev.para) this.ui.xp(this.fracAtivo(at));
     } else {
       this.apagarRec(this.rO);
       const novo = this.estFinal.oponente.ativo;
@@ -1090,11 +1077,11 @@ export class CenaBatalha extends Phaser.Scene {
     await this.dizer(`${nome} ganhou ${ev.ganho} pontos de experiencia!`, { espera: 260 });
     const ui = this.ui;
     const xpAntes = ev.xp_total - ev.ganho;
-    let nivel = ev.nivel_antes;
-    let hpAtual = this.timeLocal.find((m) => m.nome === ev.pokemon)?.hp ?? ev.hp;
     if (ev.nivel_depois > ev.nivel_antes) {
-      let f0 = this.fracXp(xpAntes, nivel);
-      for (; nivel < ev.nivel_depois; nivel++) {
+      // a barra enche, o nivel sobe e ela recomeca; so os limites do primeiro e
+      // do ultimo nivel vem no evento, os do meio enchem e esvaziam inteiros
+      let f0 = this.fracXp(xpAntes, ev.xp_nivel_antes, ev.xp_proximo_nivel_antes);
+      for (let nivel = ev.nivel_antes; nivel < ev.nivel_depois; nivel++) {
         await this.contar(520, (p) => ui.xp(f0 + (1 - f0) * p), "Quad.out");
         this.fxNivel(rec);
         ui.nivel("j", nivel + 1);
@@ -1103,13 +1090,13 @@ export class CenaBatalha extends Phaser.Scene {
         f0 = 0;
       }
       ui.hp("j", ev.hp / ev.hp_max, ev.hp, ev.hp_max);
-      await this.contar(520, (p) => ui.xp(this.fracXp(ev.xp_total, ev.nivel_depois) * p), "Quad.out");
+      const f1 = this.fracXp(ev.xp_total, ev.xp_nivel_atual, ev.xp_proximo_nivel);
+      await this.contar(520, (p) => ui.xp(f1 * p), "Quad.out");
     } else {
-      const f0 = this.fracXp(xpAntes, nivel);
-      const f1 = this.fracXp(ev.xp_total, nivel);
+      const f0 = this.fracXp(xpAntes, ev.xp_nivel_atual, ev.xp_proximo_nivel);
+      const f1 = this.fracXp(ev.xp_total, ev.xp_nivel_atual, ev.xp_proximo_nivel);
       await this.contar(620, (p) => ui.xp(f0 + (f1 - f0) * p), "Quad.out");
     }
-    this.xpAtual = { nivel: ev.nivel_depois, xp: ev.xp_total };
     await this.esp(300);
   }
 
@@ -1191,6 +1178,12 @@ export class CenaBatalha extends Phaser.Scene {
       captura: "Captura concluida.",
     }[res] || "Fim da batalha.";
     await this.dizer(texto, { tecla: true });
+    if (res === "derrota" && jogo?.ultima_derrota) {
+      // a API ja curou o time, tirou metade do dinheiro e mandou o jogador de volta
+      const ud = jogo.ultima_derrota;
+      const onde = ud.local === "centro" ? "ao ultimo Centro Pokemon" : "ao ponto de partida";
+      await this.dizer(`Voce correu ${onde}, perdendo $${ud.dinheiro_perdido}. Seu time foi curado.`, { tecla: true });
+    }
     return { resultado: res, jogo };
   }
 

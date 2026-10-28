@@ -27,7 +27,7 @@ def mapa():
 @pytest.fixture
 def viajante():
     return models.Player("Lucas", "Male", "Fun",
-                         [models.Pokemon("Faisca", "Male", "Pikachu", "Electric",
+                         [models.Pokemon("Faisca", "Male", "Pikachoque", "Electric",
                                          {"Shock": 40, "Tail Whip": 25})],
                          {"pokeball": 0, "potion": 0}, 0,
                          energia=10, energia_max=10)

@@ -52,14 +52,19 @@
 .bt-detalhe b{color:#fff;font-size:calc(7.4*var(--u));display:block;font-family:var(--sans);margin-bottom:calc(1.5*var(--u))}
 .bt-detalhe[hidden]{display:none}
 
-.bt-painel{position:absolute;right:calc(6*var(--u));bottom:calc(64*var(--u));width:calc(210*var(--u));padding:calc(4*var(--u));pointer-events:auto;
-  background:rgba(14,20,29,.97);border:calc(1.2*var(--u)) solid #3d516c;border-radius:calc(4*var(--u));box-shadow:0 calc(2*var(--u)) calc(8*var(--u)) rgba(0,0,0,.55)}
+/* Listas (Mochila e Pokemon) ocupam o lugar da caixa de texto, na faixa de baixo:
+   assim nao cobrem a caixa de info do jogador nem as criaturas. */
+.bt-painel{position:absolute;left:calc(6*var(--u));right:calc(6*var(--u));bottom:calc(6*var(--u));height:calc(56*var(--u));padding:calc(6*var(--u)) calc(7*var(--u));pointer-events:auto;
+  display:grid;gap:calc(3*var(--u));grid-template-columns:repeat(var(--cols,2),1fr);grid-auto-rows:1fr;
+  background:linear-gradient(180deg,rgba(26,36,52,.99),rgba(13,19,28,.99));border:calc(1.2*var(--u)) solid #3d516c;border-radius:calc(4*var(--u));box-shadow:0 calc(2*var(--u)) calc(8*var(--u)) rgba(0,0,0,.55)}
 .bt-painel[hidden]{display:none}
-.bt-painel .bt-btn{margin-bottom:calc(2.4*var(--u));flex-direction:row;align-items:center;justify-content:space-between;height:calc(17*var(--u));font-size:calc(7.6*var(--u))}
-.bt-painel .bt-btn:last-child{margin-bottom:0}
-.bt-painel .bt-mini{width:calc(56*var(--u));height:calc(3.2*var(--u));background:#0a0f16;border-radius:calc(2*var(--u));overflow:hidden;margin-top:calc(1.6*var(--u))}
+.bt-painel .bt-btn{flex-direction:row;align-items:center;justify-content:space-between;font-size:calc(7.6*var(--u));padding:0 calc(5*var(--u))}
+.bt-painel .bt-btn>span{flex:1;min-width:0}
+.bt-painel .bt-btn small{margin:0 calc(4*var(--u)) 0 calc(3*var(--u))}
+.bt-painel .bt-mini{width:calc(44*var(--u));height:calc(3.2*var(--u));background:#0a0f16;border-radius:calc(2*var(--u));overflow:hidden;margin-top:calc(1.6*var(--u))}
 .bt-painel .bt-mini i{display:block;height:100%}
-.bt-painel h4{margin:0 0 calc(3*var(--u));font:700 calc(5.4*var(--u)) var(--mono);letter-spacing:.08em;color:#8a97a8;text-transform:uppercase}
+.bt-painel h4{position:absolute;left:calc(8*var(--u));top:calc(-8.4*var(--u));margin:0;padding:calc(1.2*var(--u)) calc(4*var(--u));background:#0e151f;border:calc(.7*var(--u)) solid #3d516c;border-radius:calc(2*var(--u));
+  font:700 calc(5*var(--u)) var(--mono);letter-spacing:.08em;color:#9fb0c6;text-transform:uppercase}
 
 .bt-termo{position:absolute;right:calc(10*var(--u));top:calc(8*var(--u));width:calc(160*var(--u));padding:calc(3.6*var(--u)) calc(5*var(--u)) calc(3.6*var(--u));
   background:rgba(14,20,29,.88);border:calc(.7*var(--u)) solid #2c3b50;border-radius:calc(3*var(--u));pointer-events:auto;cursor:pointer;transition:opacity .25s}

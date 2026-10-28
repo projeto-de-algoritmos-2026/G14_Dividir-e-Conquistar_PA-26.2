@@ -41,7 +41,7 @@ def test_bot_respeita_limite_de_passos(mapa, jogador):
     assert resultado.objetivos_visitados == []
     assert resultado.motivo_parada == "limite de passos"
 
-def test_vencer_no_meio_do_caminho_reporta_vitoria_e_nao_caminho_cortado(mapa, jogador, pikachu):
+def test_vencer_no_meio_do_caminho_reporta_vitoria_e_nao_caminho_cortado(mapa, jogador, faisca):
     """Vencer corta a rota em execucao, e o motivo tem que ser a vitoria.
 
     Sem a ordem certa das checagens, o resultado diria "caminho interrompido"
@@ -52,7 +52,7 @@ def test_vencer_no_meio_do_caminho_reporta_vitoria_e_nao_caminho_cortado(mapa, j
 
     def completa_o_time(*args, **kwargs):
         while len(jogador.pokemon_list) < game.POKEMON_PARA_VENCER:
-            jogador.pokemon_list.append(pikachu)
+            jogador.pokemon_list.append(faisca)
 
     with mock.patch.object(game, "battle", side_effect=completa_o_time):
         resultado = executar_bot(mapa, jogador)

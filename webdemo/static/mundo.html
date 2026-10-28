@@ -26,12 +26,16 @@
   .dica{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 14px;background:#0f1722;border:1px solid #3a4a60;border-radius:10px;color:#f1f4f8;font:12px/1.5 var(--sans);text-align:center;z-index:5;pointer-events:none}
   .dica kbd{margin:0 1px}
   .dica .sep{color:#6d7c90;margin:0 6px}
+  .faixa-derrota{position:fixed;top:16px;left:50%;transform:translateX(-50%);max-width:min(560px,calc(100% - 24px));padding:10px 16px;background:rgba(40,22,26,.96);border:1px solid #c0525a;border-left:4px solid #ef4a52;border-radius:10px;z-index:30;font:13px/1.45 var(--sans);box-shadow:0 6px 24px rgba(0,0,0,.5)}
+  .faixa-derrota[hidden]{display:none}
+  .faixa-derrota b{display:block;color:#ff8a90;font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
   kbd{font:600 11px var(--mono);background:#172130;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--text)}
 </style>
 </head>
 <body>
 <div id="jogo"></div>
 <div id="aviso" class="aviso"></div>
+<div id="faixa-derrota" class="faixa-derrota" hidden></div>
 <aside class="hud">
   <h1>Mundo 2.5D<small>T3</small></h1>
   <div class="linha"><span>HP do time</span><b id="hud-hp">-</b></div>

@@ -67,23 +67,23 @@ def starting_player_info():
     player_name = input("Hello there! What is your name?: ")
     gender = input("What is your gender?: ")
     nature = input("How would you describe your nature?: ")
-    starter_pokemon = input("Which pokemon do you want to start with? P - Pikachu, C - Charmander, or S - Squirtle?: ")
+    starter_pokemon = input("Which pokemon do you want to start with? P - Pikachoque, C - Chamandrel, or S - Squirtuga?: ")
     starter_pokemon = choose_starter_pokemon(starter_pokemon)
     return Player(player_name, gender, nature, [starter_pokemon], {'potion': 3, 'pokeball': 3}, 10000)
 
 
 def choose_starter_pokemon(starter_pokemon):
     while not starter_pokemon or starter_pokemon[0].upper() not in ('P', 'C', 'S'):
-        starter_pokemon = input("Please enter the first letter P (Pikachu) , C (Charmander), or S (Squirtle) to choose "
+        starter_pokemon = input("Please enter the first letter P (Pikachoque) , C (Chamandrel), or S (Squirtuga) to choose "
                                 "your starter pokemon")
     name = input('What do you want to name your pokemon?: ')
     inicial = starter_pokemon[0].upper()
     if inicial == 'P':
-        return Pokemon(name, random.choice(["Male", "Female"]), "Pikachu", 'Electric', {'Shock': 40, 'Tail Whip': 25})
+        return Pokemon(name, random.choice(["Male", "Female"]), "Pikachoque", 'Electric', {'Shock': 40, 'Tail Whip': 25})
     elif inicial == 'C':
-        return Pokemon(name, random.choice(["Male", "Female"]), "Charmander", 'Fire', {'Flamethrower': 40, 'Claw': 25})
+        return Pokemon(name, random.choice(["Male", "Female"]), "Chamandrel", 'Fire', {'Flamethrower': 40, 'Claw': 25})
     else:
-        return Pokemon(name, random.choice(["Male", "Female"]), "Squirtle", 'Water', {'Hydropump': 40, 'Tackle': 25})
+        return Pokemon(name, random.choice(["Male", "Female"]), "Squirtuga", 'Water', {'Hydropump': 40, 'Tackle': 25})
 
 
 def playing_game(player, size=8, seed=None, ginasios=False):

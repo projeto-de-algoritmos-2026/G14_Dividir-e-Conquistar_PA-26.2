@@ -112,15 +112,15 @@ function desenhar(g, lista, ox, oy, crescer, cor) {
   }
 }
 
-// Gera a folha `chave` e registra os quadros "<linha>_<q>" nela.
-function gerarFolha(cena, chave, pal) {
-  const linhas = Object.keys(LINHAS);
-  const W = CEL_W * QUADROS;
+// Gera a folha `chave` e registra os quadros "<linha>_<q>" nela. `esc` e a
+// resolucao (pixels por unidade do mundo), `linhas` e `quadros` limitam o que sai.
+function gerarFolha(cena, chave, pal, esc = ESC, linhas = Object.keys(LINHAS), quadros = QUADROS) {
+  const W = CEL_W * quadros;
   const H = CEL_H * linhas.length;
   const g = cena.make.graphics({ x: 0, y: 0, add: false });
-  g.scaleCanvas(ESC, ESC);
+  g.scaleCanvas(esc, esc);
   linhas.forEach((linha, i) => {
-    for (let q = 0; q < QUADROS; q++) {
+    for (let q = 0; q < quadros; q++) {
       const lista = formas(pal, linha, q);
       const ox = q * CEL_W;
       const oy = i * CEL_H;
@@ -128,14 +128,25 @@ function gerarFolha(cena, chave, pal) {
       desenhar(g, lista, ox, oy, 0, null);
     }
   });
-  g.generateTexture(chave, W * ESC, H * ESC);
+  g.generateTexture(chave, W * esc, H * esc);
   g.destroy();
   const tex = cena.textures.get(chave);
   linhas.forEach((linha, i) => {
-    for (let q = 0; q < QUADROS; q++) {
-      tex.add(`${linha}_${q}`, 0, q * CEL_W * ESC, i * CEL_H * ESC, CEL_W * ESC, CEL_H * ESC);
+    for (let q = 0; q < quadros; q++) {
+      tex.add(`${linha}_${q}`, 0, q * CEL_W * esc, i * CEL_H * esc, CEL_W * esc, CEL_H * esc);
     }
   });
+}
+
+// Treinadores na batalha aparecem ampliados 2,3x a 2,9x e a camera ainda dobra
+// o zoom: a folha do mapa (ESC = 4) ficaria borrada. Estas folhas saem na escala
+// da batalha, so com os quadros parados de frente (baixo) e de costas (cima).
+export const ESC_BATALHA = 16;
+
+export function garantirFolhaBatalha(cena, nome) {
+  const chave = "bat_" + nome;
+  if (!cena.textures.exists(chave)) gerarFolha(cena, chave, PALETAS[nome], ESC_BATALHA, ["baixo", "cima"], 1);
+  return chave;
 }
 
 export const FOLHAS_CPU = ["cpuA", "cpuB", "cpuC"];

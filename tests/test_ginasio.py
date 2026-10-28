@@ -90,9 +90,14 @@ def test_populacao_invalida():
 
 def test_lider_usa_nivel_k_e_percentis_crescem():
     mapa = Grid(size=24, seed=9, ginasios=True, regiao_lado=8, populacao_tamanho=101)
-    lideres = [r.lider for r in mapa.regioes if r.lider]
+    # etapa 4: os percentis sobem com a distancia da regiao ate a origem
+    # (desempate pelo indice), nao mais na ordem de linha dos blocos
+    com_lider = [r for r in mapa.regioes if r.lider]
+    por_distancia = sorted(com_lider, key=lambda r: (ginasio._distancia_origem(r.linhas[0], r.colunas[0]), r.indice))
+    lideres = [r.lider for r in por_distancia]
     assert lideres[0].percentil == ginasio.PERCENTIL_MIN
     assert [l.percentil for l in lideres] == sorted(l.percentil for l in lideres)
+    assert [l.nome for l in lideres] == [f"Lider{i + 1}" for i in range(len(lideres))]
     for reg in mapa.regioes:
         if reg.lider:
             esperado = sorted(reg.populacao)[reg.lider.k]
@@ -141,3 +146,32 @@ def test_pisar_no_ginasio_nao_quebra_e_ele_continua(jogador, capsys):
     assert mov.valido and mov.posicao == (r, c)
     assert "construcao" in capsys.readouterr().out
     assert mapa.grid[r][c].occupied_with == grid_mod.GINASIO
+
+
+def test_faixa_de_niveis_cresce_da_origem_ao_fundo():
+    assert ginasio.faixa_de_niveis(0) == ginasio.NIVEIS_ORIGEM == (5, 30)
+    assert ginasio.faixa_de_niveis(1) == ginasio.NIVEIS_FUNDO == (50, 100)
+    meio = ginasio.faixa_de_niveis(0.5)
+    assert 25 <= meio[0] <= 30 and 60 <= meio[1] <= 65
+    pisos = [ginasio.faixa_de_niveis(t / 10)[0] for t in range(11)]
+    assert pisos == sorted(pisos)
+
+
+def test_populacao_da_regiao_cresce_com_a_distancia_da_origem():
+    mapa = Grid(size=32, seed=3, ginasios=True, regiao_lado=8, populacao_tamanho=501)
+    for reg in mapa.regioes:
+        dist = ginasio._distancia_origem(reg.linhas[0], reg.colunas[0])
+        t = dist / ginasio._distancia_origem(24, 24)
+        piso, teto = ginasio.faixa_de_niveis(t)
+        assert min(reg.populacao) >= piso and max(reg.populacao) <= teto
+    origem = mapa.regioes[0]
+    fundo = mapa.regioes[-1]
+    assert max(origem.populacao) <= 30 and min(fundo.populacao) >= 50
+
+
+def test_populacao_assimetrica_tem_mais_fracos_que_fortes():
+    import random
+    pop = ginasio.gerar_populacao(random.Random(1), 4000, 1, 100, assimetria=1.6)
+    assert sum(n <= 50 for n in pop) > 0.6 * len(pop)
+    uniforme = ginasio.gerar_populacao(random.Random(1), 4000, 1, 100)
+    assert abs(sum(n <= 50 for n in uniforme) / 4000 - 0.5) < 0.05
