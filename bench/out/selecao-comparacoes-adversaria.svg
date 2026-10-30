@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" font-family="system-ui, sans-serif">
+<rect width="760" height="460" fill="#ffffff"/>
+<text x="78" y="30" font-size="17" font-weight="600" fill="#1d2733">Comparacoes na entrada adversaria</text>
+<text x="78" y="50" font-size="12" fill="#66707c">0..n-1 ordenada, k = n-1. Em log-log, inclinacao 1 e O(n); inclinacao 2 e O(n²).</text>
+<line x1="78" y1="76" x2="96" y2="76" stroke="#2a78d6" stroke-width="2" stroke-linecap="round"/><circle cx="87" cy="76" r="4" fill="#2a78d6"/>
+<text x="102" y="80" font-size="12" fill="#1d2733">mediana das medianas</text>
+<line x1="244.0" y1="76" x2="262.0" y2="76" stroke="#eb6834" stroke-width="2" stroke-linecap="round"/><circle cx="253.0" cy="76" r="4" fill="#eb6834"/>
+<text x="268.0" y="80" font-size="12" fill="#1d2733">ordenar (sorted)</text>
+<line x1="383.6" y1="76" x2="401.6" y2="76" stroke="#1baf7a" stroke-width="2" stroke-linecap="round"/><circle cx="392.6" cy="76" r="4" fill="#1baf7a"/>
+<text x="407.6" y="80" font-size="12" fill="#1d2733">quickselect aleatorio</text>
+<line x1="556.2" y1="76" x2="574.2" y2="76" stroke="#eda100" stroke-width="2" stroke-linecap="round"/><circle cx="565.2" cy="76" r="4" fill="#eda100"/>
+<text x="580.2" y="80" font-size="12" fill="#1d2733">quickselect ingenuo</text>
+<line x1="78" y1="398.0" x2="732" y2="398.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="402.0" font-size="11" text-anchor="end" fill="#66707c">10²</text>
+<line x1="78" y1="349.0" x2="732" y2="349.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="353.0" font-size="11" text-anchor="end" fill="#66707c">10³</text>
+<line x1="78" y1="300.0" x2="732" y2="300.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="304.0" font-size="11" text-anchor="end" fill="#66707c">10⁴</text>
+<line x1="78" y1="251.0" x2="732" y2="251.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="255.0" font-size="11" text-anchor="end" fill="#66707c">10⁵</text>
+<line x1="78" y1="202.0" x2="732" y2="202.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="206.0" font-size="11" text-anchor="end" fill="#66707c">10⁶</text>
+<line x1="78" y1="153.0" x2="732" y2="153.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="157.0" font-size="11" text-anchor="end" fill="#66707c">10⁷</text>
+<line x1="78" y1="104.0" x2="732" y2="104.0" stroke="#e4e8ee" stroke-width="1"/><text x="68" y="108.0" font-size="11" text-anchor="end" fill="#66707c">10⁸</text>
+<line x1="78" y1="398" x2="732" y2="398" stroke="#96a0ac" stroke-width="1"/>
+<text x="78.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">10³</text>
+<text x="182.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">3·10³</text>
+<text x="296.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">10⁴</text>
+<text x="400.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">3·10⁴</text>
+<text x="514.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">10⁵</text>
+<text x="618.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">3·10⁵</text>
+<text x="732.0" y="420" font-size="12" text-anchor="middle" fill="#414b57">10⁶</text>
+<text x="405" y="444" font-size="12" text-anchor="middle" fill="#66707c">n (tamanho da populacao, escala log)</text>
+<text x="18" y="251" font-size="12" fill="#66707c" text-anchor="middle" transform="rotate(-90 18 251)">comparacoes (escala log)</text>
+<polyline points="78.0,312.9 182.0,289.1 296.0,262.9 400.0,239.3 514.0,213.4 618.0,189.9 732.0,164.1" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="78.0" cy="312.9" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 1.000: 5.447</title></circle>
+<circle cx="182.0" cy="289.1" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 3.000: 16.682</title></circle>
+<circle cx="296.0" cy="262.9" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 10.000: 57.258</title></circle>
+<circle cx="400.0" cy="239.3" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 30.000: 173.214</title></circle>
+<circle cx="514.0" cy="213.4" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 100.000: 585.327</title></circle>
+<circle cx="618.0" cy="189.9" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 300.000: 1.762.997</title></circle>
+<circle cx="732.0" cy="164.1" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"><title>mediana das medianas: n = 1.000.000: 5.922.929</title></circle>
+<polyline points="78.0,349.0 182.0,325.6 296.0,300.0 400.0,276.6 514.0,251.0 618.0,227.6 732.0,202.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="78.0" cy="349.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 1.000: 999</title></circle>
+<circle cx="182.0" cy="325.6" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 3.000: 2.999</title></circle>
+<circle cx="296.0" cy="300.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 10.000: 9.999</title></circle>
+<circle cx="400.0" cy="276.6" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 30.000: 29.999</title></circle>
+<circle cx="514.0" cy="251.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 100.000: 99.999</title></circle>
+<circle cx="618.0" cy="227.6" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 300.000: 299.999</title></circle>
+<circle cx="732.0" cy="202.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"><title>ordenar (sorted): n = 1.000.000: 999.999</title></circle>
+<polyline points="78.0,338.1 182.0,304.7 296.0,280.8 400.0,268.3 514.0,230.2 618.0,205.4 732.0,190.1" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="78.0" cy="338.1" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 1.000: 1.672</title></circle>
+<circle cx="182.0" cy="304.7" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 3.000: 8.014</title></circle>
+<circle cx="296.0" cy="280.8" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 10.000: 24.657</title></circle>
+<circle cx="400.0" cy="268.3" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 30.000: 44.345</title></circle>
+<circle cx="514.0" cy="230.2" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 100.000: 265.777</title></circle>
+<circle cx="618.0" cy="205.4" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 300.000: 851.601</title></circle>
+<circle cx="732.0" cy="190.1" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"><title>quickselect aleatorio: n = 1.000.000: 1.753.089</title></circle>
+<polyline points="78.0,216.7 182.0,170.0 296.0,118.7" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="78.0" cy="216.7" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"><title>quickselect ingenuo: n = 1.000: 500.499</title></circle>
+<circle cx="182.0" cy="170.0" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"><title>quickselect ingenuo: n = 3.000: 4.501.499</title></circle>
+<circle cx="296.0" cy="118.7" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"><title>quickselect ingenuo: n = 10.000: 50.004.999</title></circle>
+</svg>

@@ -1,0 +1,5 @@
+distribuicao,n,algoritmo,tempo_estimado_s,motivo
+adversaria,30000,quickselect_ingenuo,21.9,estimativa quadratica acima do orcamento de 10 s
+adversaria,100000,quickselect_ingenuo,243.2,estimativa quadratica acima do orcamento de 10 s
+adversaria,300000,quickselect_ingenuo,2188.7,estimativa quadratica acima do orcamento de 10 s
+adversaria,1000000,quickselect_ingenuo,24318.4,estimativa quadratica acima do orcamento de 10 s

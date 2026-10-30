@@ -19,6 +19,11 @@ Os dois primeiros sao do trabalho 1, e a separacao e o ponto principal do desenh
   experimento da tese "parar tarde nao e parar pouco", e o cruzamento com os
   tres algoritmos liga os dois trabalhos.
 
+- `bench.selecao` (trabalho 3): selecao do k-esimo menor. Mediana das
+  medianas contra ordenar e contra o quickselect (pivo aleatorio e pivo
+  ingenuo), com n de 10^3 a 10^6, em tres entradas: aleatoria, niveis do jogo
+  e a adversaria que leva o pivo ingenuo a O(n^2). Mede tempo e comparacoes.
+
 Grade: tamanhos 8, 15 e 30 x 30 seeds x 3 algoritmos (e, nas paradas, 3
 tanques x 6 estrategias). Saida em CSV em `bench/out/`, mais graficos SVG em
 `bench.charts`.

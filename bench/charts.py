@@ -9,6 +9,7 @@ regressao, ai sim vale trocar por matplotlib, e a troca e local a este modulo.
 """
 
 import argparse
+import math
 from pathlib import Path
 
 from .common import SAIDA_PADRAO, ler_csv
@@ -26,8 +27,20 @@ CORES = {
     "limiar_10": "#c0392b",
     "limiar_25": "#e08e0b",
     "limiar_50": "#7b5ea7",
+    # Selecao do k-esimo, trabalho 3 (paleta categorica validada, ordem fixa).
+    "mediana_medianas": "#2a78d6",
+    "ordenar": "#eb6834",
+    "quickselect_aleatorio": "#1baf7a",
+    "quickselect_ingenuo": "#eda100",
 }
 COR_PADRAO = "#6c757d"
+
+ROTULOS = {
+    "mediana_medianas": "mediana das medianas",
+    "ordenar": "ordenar (sorted)",
+    "quickselect_aleatorio": "quickselect aleatorio",
+    "quickselect_ingenuo": "quickselect ingenuo",
+}
 
 
 def _escala(valor, minimo, maximo, inicio, fim):
@@ -123,6 +136,139 @@ def grafico_linhas(titulo, rotulo_x, rotulo_y, series, caminho: Path) -> Path:
     return caminho
 
 
+SUPERSCRITO = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+
+
+def _potencia(valor):
+    """1000 -> '10³', 3000 -> '3·10³', 0.01 -> '10⁻²'."""
+    expoente = math.floor(math.log10(valor) + 1e-9)
+    mantissa = round(valor / 10**expoente, 2)
+    base = "10" + str(expoente).translate(SUPERSCRITO)
+    return base if mantissa == 1 else f"{mantissa:g}·{base}"
+
+
+def _numero(valor):
+    """Numero no formato brasileiro: 1.000.000 e 9,32."""
+    if valor >= 100:
+        return f"{valor:,.0f}".replace(",", ".")
+    return f"{valor:.3g}".replace(".", ",")
+
+
+def grafico_log(titulo, subtitulo, rotulo_x, rotulo_y, series, caminho: Path,
+                log_y=True) -> Path:
+    """Linhas com eixo x em escala log (e y tambem, se `log_y`).
+
+    Feito pro trabalho 3, em que n vai de 10^3 a 10^6: na escala linear os
+    quatro primeiros tamanhos ficariam empilhados no canto. Em log-log, uma
+    reta de inclinacao 1 e O(n) e de inclinacao 2 e O(n^2), que e exatamente o
+    que o grafico precisa mostrar. A legenda fica numa linha acima do grafico
+    e cada ponto tem <title>, que o navegador mostra ao passar o mouse.
+    """
+    pontos_todos = [p for pontos in series.values() for p in pontos if p[1] > 0 or not log_y]
+    if not pontos_todos:
+        raise ValueError("grafico sem nenhum ponto")
+
+    largura, altura = 760, 460
+    esquerda, direita, topo, base = 78, largura - 28, 104, altura - 62
+
+    xs = sorted({p[0] for p in pontos_todos})
+    lx_min, lx_max = math.log10(xs[0]), math.log10(xs[-1])
+
+    ys = [p[1] for p in pontos_todos]
+    if log_y:
+        ly_min = math.floor(math.log10(min(ys)))
+        ly_max = math.ceil(math.log10(max(ys)))
+        if ly_max == ly_min:
+            ly_max += 1
+        ticks_y = [10**e for e in range(ly_min, ly_max + 1)]
+
+        def py(y):
+            return _escala(math.log10(y), ly_min, ly_max, base, topo)
+    else:
+        bruto = (max(ys) or 1) / 4
+        passo = min(m * 10**math.floor(math.log10(bruto)) for m in (1, 2, 2.5, 5, 10)
+                    if m * 10**math.floor(math.log10(bruto)) >= bruto)
+        ticks_y = [passo * i for i in range(5)]
+        y_max = ticks_y[-1]
+
+        def py(y):
+            return _escala(y, 0, y_max, base, topo)
+
+    def px(x):
+        return _escala(math.log10(x), lx_min, lx_max, esquerda, direita)
+
+    partes = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{largura}" height="{altura}" '
+        f'viewBox="0 0 {largura} {altura}" font-family="system-ui, sans-serif">',
+        f'<rect width="{largura}" height="{altura}" fill="#ffffff"/>',
+        f'<text x="{esquerda}" y="30" font-size="17" font-weight="600" fill="#1d2733">{titulo}</text>',
+        f'<text x="{esquerda}" y="50" font-size="12" fill="#66707c">{subtitulo}</text>',
+    ]
+
+    x_legenda = esquerda
+    for nome in series:
+        cor = CORES.get(nome, COR_PADRAO)
+        rotulo = ROTULOS.get(nome, nome)
+        partes.append(
+            f'<line x1="{x_legenda}" y1="76" x2="{x_legenda + 18}" y2="76" '
+            f'stroke="{cor}" stroke-width="2" stroke-linecap="round"/>'
+            f'<circle cx="{x_legenda + 9}" cy="76" r="4" fill="{cor}"/>'
+        )
+        partes.append(
+            f'<text x="{x_legenda + 24}" y="80" font-size="12" fill="#1d2733">{rotulo}</text>'
+        )
+        x_legenda += 34 + 6.6 * len(rotulo)
+
+    for valor in ticks_y:
+        y = py(valor)
+        texto = _potencia(valor) if log_y else f"{valor:g}"
+        partes.append(
+            f'<line x1="{esquerda}" y1="{y:.1f}" x2="{direita}" y2="{y:.1f}" '
+            f'stroke="#e4e8ee" stroke-width="1"/>'
+            f'<text x="{esquerda - 10}" y="{y + 4:.1f}" font-size="11" '
+            f'text-anchor="end" fill="#66707c">{texto}</text>'
+        )
+
+    partes.append(
+        f'<line x1="{esquerda}" y1="{base}" x2="{direita}" y2="{base}" '
+        f'stroke="#96a0ac" stroke-width="1"/>'
+    )
+    for valor in xs:
+        partes.append(
+            f'<text x="{px(valor):.1f}" y="{base + 22}" font-size="12" '
+            f'text-anchor="middle" fill="#414b57">{_potencia(valor)}</text>'
+        )
+    partes.append(
+        f'<text x="{(esquerda + direita) / 2:.0f}" y="{altura - 16}" font-size="12" '
+        f'text-anchor="middle" fill="#66707c">{rotulo_x}</text>'
+    )
+    partes.append(
+        f'<text x="18" y="{(topo + base) / 2:.0f}" font-size="12" fill="#66707c" '
+        f'text-anchor="middle" transform="rotate(-90 18 {(topo + base) / 2:.0f})">{rotulo_y}</text>'
+    )
+
+    for nome, pontos in series.items():
+        cor = CORES.get(nome, COR_PADRAO)
+        validos = sorted(p for p in pontos if p[1] > 0 or not log_y)
+        coordenadas = [(px(x), py(y), x, y) for x, y in validos]
+        traco = " ".join(f"{cx:.1f},{cy:.1f}" for cx, cy, _, _ in coordenadas)
+        partes.append(
+            f'<polyline points="{traco}" fill="none" stroke="{cor}" stroke-width="2" '
+            f'stroke-linejoin="round" stroke-linecap="round"/>'
+        )
+        for cx, cy, x, y in coordenadas:
+            partes.append(
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="4" fill="{cor}" '
+                f'stroke="#ffffff" stroke-width="2"><title>{ROTULOS.get(nome, nome)}: '
+                f'n = {_numero(x)}: {_numero(y)}</title></circle>'
+            )
+
+    partes.append("</svg>")
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    caminho.write_text("\n".join(partes), encoding="utf-8")
+    return caminho
+
+
 def series_por_algoritmo(linhas, coluna, filtro=None, serie="algoritmo"):
     """{serie: [(tamanho, valor)]} a partir de um CSV de resumo.
 
@@ -170,6 +316,27 @@ GRAFICOS_PARADAS = [
 ]
 
 
+# (coluna, distribuicao, titulo, subtitulo, rotulo, arquivo, log_y). Os dois
+# primeiros sao os da tese: comparacoes nao dependem da maquina.
+GRAFICOS_SELECAO = [
+    ("comparacoes_medio", "adversaria", "Comparacoes na entrada adversaria",
+     "0..n-1 ordenada, k = n-1. Em log-log, inclinacao 1 e O(n); inclinacao 2 e O(n²).",
+     "comparacoes (escala log)", "selecao-comparacoes-adversaria.svg", True),
+    ("comparacoes_por_n", "aleatoria", "Comparacoes por elemento na entrada aleatoria",
+     "k = mediana. Linha reta = O(n); subindo com n = mais que linear.",
+     "comparacoes / n", "selecao-comparacoes-por-n.svg", False),
+    ("tempo_ms_medio", "aleatoria", "Tempo na entrada aleatoria",
+     "Inteiros em [0, 10⁹), k = mediana. Menor tempo de cada seed, media das seeds.",
+     "tempo em ms (escala log)", "selecao-tempo-aleatoria.svg", True),
+    ("tempo_ms_medio", "niveis", "Tempo na populacao do jogo",
+     "Niveis de 1 a 100, k = mediana. Menor tempo de cada seed, media das seeds.",
+     "tempo em ms (escala log)", "selecao-tempo-niveis.svg", True),
+    ("tempo_ms_medio", "adversaria", "Tempo na entrada adversaria",
+     "0..n-1 ordenada, k = n-1. O ingenuo para quando passaria do orcamento.",
+     "tempo em ms (escala log)", "selecao-tempo-adversaria.svg", True),
+]
+
+
 def gerar(saida: Path = SAIDA_PADRAO, estado="hp100") -> list[Path]:
     """Le os resumos ja gravados e escreve os SVGs ao lado deles."""
     gerados = []
@@ -203,6 +370,22 @@ def gerar(saida: Path = SAIDA_PADRAO, estado="hp100") -> list[Path]:
                 gerados.append(grafico_linhas(
                     f"{titulo} (tanque medio)", "tamanho do mapa", rotulo, series,
                     saida / arquivo,
+                ))
+
+    resumo_selecao = saida / "selecao_resumo.csv"
+    if resumo_selecao.exists():
+        linhas = ler_csv(resumo_selecao)
+        for coluna, distribuicao, titulo, subtitulo, rotulo, arquivo, log_y in GRAFICOS_SELECAO:
+            series: dict[str, list] = {}
+            for linha in linhas:
+                if linha["distribuicao"] == distribuicao:
+                    series.setdefault(linha["algoritmo"], []).append(
+                        (int(linha["n"]), float(linha[coluna]))
+                    )
+            if series:
+                gerados.append(grafico_log(
+                    titulo, subtitulo, "n (tamanho da populacao, escala log)", rotulo,
+                    series, saida / arquivo, log_y=log_y,
                 ))
     return gerados
 
