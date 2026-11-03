@@ -147,7 +147,7 @@ export function criarTelaBenchmark() {
     const L = (v) => Math.round(v).toLocaleString("pt-BR");
     const c = (num, leg) => `<div class="t3-card"><div class="t3-num">${num}</div><div class="t3-leg">${leg}</div></div>`;
     return c(`${L(ing.compTotal)} <i>x</i> ${L(mm.compTotal)}`, "comparações: quickselect ingênuo contra mediana das medianas, numa lista azarada de 10.000 números")
-      + c(`~${Math.round(tetoMM)} <small>por número</small>`, "comparações da mediana das medianas, de mil a 1 milhão de números: não cresce")
+      + c(`~${Math.round(tetoMM)} <small>por número</small>`, "comparações da mediana das medianas, de mil a 1 milhão de números: estabiliza, não sobe com o tamanho")
       + c(`${L(ord.tempo)} ms <i>x</i> ${L(mm1.tempo)} ms`, "ordenar contra mediana das medianas, 1 milhão de números aleatórios: no relógio, ordenar ganha");
   }
 
