@@ -19,6 +19,7 @@
   </nav>
   <div class="spacer"></div>
   <a class="ghost" href="/t1" title="A demo do Trabalho 1, como era">Demo do T1</a>
+  <a class="ghost" href="/mundo.html?size=12&seed=1" title="O jogo 2.5D do Trabalho 3">Mundo 2.5D (T3)</a>
   <button class="ghost" id="btn-legenda">Legenda</button>
 </header>
 
@@ -139,9 +140,9 @@
     </div>
     <div class="cmp-ctl">
       <div class="field"><label>Página</label>
-        <div class="seg" id="bn-page"><button data-p="t1" class="on">Trabalho 1 · Grafos</button><button data-p="t2">Trabalho 2 · Guloso</button><button data-p="ac">Juntos</button></div>
+        <div class="seg" id="bn-page"><button data-p="t1" class="on">Trabalho 1 · Grafos</button><button data-p="t2">Trabalho 2 · Guloso</button><button data-p="ac">Juntos</button><button data-p="t3">Trabalho 3 · Seleção</button></div>
       </div>
-      <div class="field"><label>Mapa</label>
+      <div class="field" id="bn-size-wrap"><label>Mapa</label>
         <div class="seg" id="bn-size"><button data-s="8">8×8</button><button data-s="15" class="on">15×15</button><button data-s="30">30×30</button></div>
       </div>
       <div class="field" id="bn-alc-wrap"><label title="Fração do custo da rota do Dijkstra: 30%, 50% e 75%">Alcance</label>

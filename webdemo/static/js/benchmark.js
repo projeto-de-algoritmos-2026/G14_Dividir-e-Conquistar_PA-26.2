@@ -112,7 +112,30 @@ export function criarTelaBenchmark() {
       <div class="tese-bn">A rota mais barata do T1 <b>pode</b> precisar de menos paradas no T2, mas o medido é modesto: em ${Q.size}×${Q.size}, o Dijkstra precisou de menos paradas em <b>${menos}</b> de ${total} destinos, empatou no resto e <b>${mais === 0 ? "nunca precisou de mais" : `precisou de mais em ${mais}`}</b>. Destinos em que o Dijkstra precisou de menos paradas, por mapa: ${porTamanho}. Três tamanhos não provam uma tendência; é o que a grade mediu.</div>`;
   }
 
+  // Trabalho 3: graficos estaticos servidos de /bench/out (nao dependem de mapa nem alcance).
+  const GRAFICOS_T3 = [
+    ["selecao-comparacoes-adversaria", "Comparações na entrada adversária",
+      "Numa entrada montada para dar azar, com 10.000 números, o quickselect ingênuo fez 50.004.999 comparações. A mediana das medianas fez 57.258."],
+    ["selecao-comparacoes-por-n", "Comparações por elemento",
+      "A mediana das medianas gasta cerca de 9 comparações por número, e esse valor não cresce. Ordenar tudo vai de 8,7 a 18,6 conforme a lista aumenta."],
+    ["selecao-tempo-aleatoria", "Tempo em listas aleatórias",
+      "No relógio, com 1 milhão de números aleatórios, a mediana das medianas levou 584 ms e ordenar levou 209 ms. A vantagem dela é a garantia, não a velocidade."],
+    ["selecao-tempo-niveis", "Tempo na população do jogo",
+      "Mesma comparação com os níveis de 1 a 100 do jogo, pegando o nível do meio. É o uso real da seleção no Mundo 2.5D."],
+    ["selecao-tempo-adversaria", "Tempo na entrada adversária",
+      "Com 10.000 números numa entrada ruim de propósito, o quickselect ingênuo levou cerca de 2,4 segundos. A mediana das medianas levou 3,9 milissegundos."],
+  ];
+
+  function paginaT3() {
+    const cards = GRAFICOS_T3.map(([arq, titulo, frase]) => `<div class="metric"><div class="mt">${titulo}</div>
+      <img src="/bench/out/${arq}.svg" alt="${titulo}" style="width:100%;height:auto;background:#fff;border-radius:8px">
+      <p style="margin:8px 0 0;color:var(--muted)">${frase}</p></div>`).join("");
+    return `<div class="bn-group"><h3>Seleção do k-ésimo <span class="prov real">medido · bench/out</span></h3><div class="bn-row c2">${cards}</div></div>
+      <div class="tese-bn">A mediana das medianas não é a mais rápida em média. O que ela entrega é um limite: mesmo no pior caso, o custo cresce em linha reta com o tamanho da lista.</div>`;
+  }
+
   const SUB = {
+    t3: "<b>Trabalho 3 · Seleção.</b> Mediana das medianas, ordenar e quickselect (aleatório e ingênuo) achando o k-ésimo elemento.",
     t1: "<b>Trabalho 1 · Grafos.</b> DFS, BFS e Dijkstra. Médias de 30 seeds por tamanho, HP cheio e sem Surf.",
     t2: "<b>Trabalho 2 · Guloso.</b> Seis regras de parada sobre a rota do Dijkstra, medidas em 7.109 simulações.",
     ac: "<b>Juntos.</b> A rota do primeiro trabalho vira entrada do segundo: o que muda quando o caminho é mais barato?",
@@ -129,8 +152,9 @@ export function criarTelaBenchmark() {
     document.querySelectorAll("#bn-size button").forEach((x) => x.classList.toggle("on", Number(x.dataset.s) === Q.size));
     document.querySelectorAll("#bn-alc button").forEach((x) => x.classList.toggle("on", x.dataset.a === Q.alcance));
     $("#bn-alc-wrap").style.display = Q.pagina === "t2" ? "" : "none";
+    $("#bn-size-wrap").style.display = Q.pagina === "t3" ? "none" : "";
     $("#bn-sub").innerHTML = SUB[Q.pagina];
-    corpo.innerHTML = { t1: paginaT1, t2: paginaT2, ac: paginaJuntos }[Q.pagina](b);
+    corpo.innerHTML = { t1: paginaT1, t2: paginaT2, ac: paginaJuntos, t3: paginaT3 }[Q.pagina](b);
     requestAnimationFrame(() => requestAnimationFrame(() => corpo.querySelectorAll(".fill").forEach((f) => { f.style.width = f.dataset.w + "%"; })));
   }
 
