@@ -552,8 +552,8 @@ jogador real.
 A interface não tem teste automatizado do JavaScript. A cena do mapa e a da
 batalha foram conferidas manualmente no navegador, com os prints como registro.
 O que tem teste é o motor de batalha, a API e a seleção: a suíte coleta 3.638
-testes. O tempo da suíte inteira não foi medido para este relatório (a
-confirmar).
+testes. A suíte inteira roda em cerca de 75 s num clone limpo, com ambiente
+virtual novo, e também passa numa cópia sem `.git`, como a do ZIP do GitHub.
 
 ## 9. Conclusão
 
