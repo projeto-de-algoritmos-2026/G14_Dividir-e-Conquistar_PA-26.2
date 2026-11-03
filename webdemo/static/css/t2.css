@@ -208,6 +208,27 @@ input[type=range]{width:100%;accent-color:var(--jade)}
 @keyframes pronto{50%{box-shadow:0 0 0 4px rgba(18,183,163,.3)}}
 @keyframes bob{50%{transform:translateX(-50%) translateY(-3px)}}
 
+/* Benchmark, pagina do Trabalho 3 (cabe sem rolagem) */
+.t3{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.t3-cards{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.t3-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 16px;min-width:0}
+.t3-num{font:800 clamp(22px,3.4vh,30px)/1.15 var(--mono);letter-spacing:-.02em;color:var(--text);white-space:nowrap}
+.t3-num i{font-style:normal;color:var(--muted);font-weight:500;margin:0 .15em}
+.t3-num small{font:600 .5em var(--sans);color:var(--jade)}
+.t3-leg{color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:2px}
+.t3-chart{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px 6px}
+.t3-ctl{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:2px}
+.t3-ctl label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.t3-ctl label:nth-of-type(2){margin-left:10px}
+.t3-seg button{padding:5px 11px;font-size:13px}
+.t3-legenda{flex-basis:100%;justify-content:flex-end;display:flex;gap:4px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.t3-legenda span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.t3-legenda i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.t3-plot{flex:1;min-height:0;position:relative}
+.t3-plot svg{position:absolute;inset:0;display:block;font-family:var(--sans)}
+.t3-fim{flex:none;text-align:center;font-size:15px;color:var(--muted);padding:2px 0}
+.t3-fim b{color:var(--jade)}
+
 /* ============ responsivo ============ */
 /* janelas baixas: comprime o que é acessório, o mapa fica com o resto */
 @media (max-height:820px){
