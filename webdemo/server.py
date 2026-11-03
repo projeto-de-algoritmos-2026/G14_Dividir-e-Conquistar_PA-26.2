@@ -28,6 +28,8 @@ from . import api, api_batalha, api_greedy
 from .benchmark import eventos_benchmark
 
 ESTATICOS = Path(__file__).resolve().parent / "static"
+# Graficos do benchmark do T3 (so leitura, so .svg).
+BENCH_OUT = Path(__file__).resolve().parent.parent / "bench" / "out"
 
 # `mimetypes` consulta o sistema, e no Windows (o README usa PowerShell) um .js
 # pode sair como text/plain, que o navegador RECUSA como modulo ES. Fixar aqui.
@@ -129,6 +131,20 @@ class Manipulador(BaseHTTPRequestHandler):
                 or "application/octet-stream")
         self.send_response(200)
         self.send_header("Content-Type", f"{tipo}; charset=utf-8")
+        self.send_header("Content-Length", str(len(corpo)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(corpo)
+
+    def _bench_svg(self, nome):
+        caminho = (BENCH_OUT / nome).resolve()
+        if (caminho.suffix.lower() != ".svg" or not caminho.is_file()
+                or BENCH_OUT.resolve() not in caminho.parents):
+            self._json({"erro": "nao encontrado"}, status=404)
+            return
+        corpo = caminho.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
         self.send_header("Content-Length", str(len(corpo)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
@@ -258,6 +274,8 @@ class Manipulador(BaseHTTPRequestHandler):
             return self._estatico("mundo.html")
         if rota in ("/t1.js", "/t1.css"):
             return self._estatico(rota.lstrip("/"))
+        if rota.startswith("/bench/out/"):
+            return self._bench_svg(rota[len("/bench/out/"):])
         if rota.startswith("/static/"):
             return self._estatico(rota[len("/static/"):])
         if rota.startswith("/api/t2/") and self._rota_t2(rota, consulta):
