@@ -138,13 +138,15 @@ class Manipulador(BaseHTTPRequestHandler):
 
     def _bench_svg(self, nome):
         caminho = (BENCH_OUT / nome).resolve()
-        if (caminho.suffix.lower() != ".svg" or not caminho.is_file()
+        csv = caminho.name == "selecao_resumo.csv"
+        if (not (csv or caminho.suffix.lower() == ".svg") or not caminho.is_file()
                 or BENCH_OUT.resolve() not in caminho.parents):
             self._json({"erro": "nao encontrado"}, status=404)
             return
         corpo = caminho.read_bytes()
         self.send_response(200)
-        self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+        self.send_header("Content-Type", "text/csv; charset=utf-8" if csv
+                         else "image/svg+xml; charset=utf-8")
         self.send_header("Content-Length", str(len(corpo)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
