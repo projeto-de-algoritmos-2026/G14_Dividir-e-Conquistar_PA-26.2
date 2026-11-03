@@ -1,6 +1,8 @@
-**Vídeo de apresentação:** (em breve)
+**Vídeo de apresentação:** [GP 14 - PA - Dividir e Conquistar - 2026-2](https://youtu.be/lCqhpXO-TG0)
 
 # Pokémon CLI: o Ginásio (Trabalho 3, Dividir e Conquistar)
+
+Relatório final: [`docs/relatorio-trabalho-3.md`](docs/relatorio-trabalho-3.md)
 
 Projeto de Algoritmos (FGA0124) | Grupo 14 | Módulo 3: Dividir e Conquistar
 
@@ -35,6 +37,11 @@ python -m webdemo                 # interface web (abre o navegador)
 
 A interface sobe em `http://127.0.0.1:<porta>/`. Use `--porta N` para escolher
 a porta e `--sem-navegador` para não abrir o navegador.
+
+Na interface, o link **Mundo 2.5D (T3)** no topo abre o jogo com ginásios
+(`/mundo.html?size=12&seed=1`, o mapa usado no vídeo e no relatório), e a aba
+**Benchmark > Trabalho 3 · Seleção** mostra os resultados da seleção, com
+seletores de entrada e de medida.
 
 Terminal (jogo dos Trabalhos 1 e 2):
 
